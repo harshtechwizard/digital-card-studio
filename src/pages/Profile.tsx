@@ -25,9 +25,13 @@ export default function Profile() {
     full_name: '',
     primary_email: '',
     mobile_number: '',
+    phone_number: '',
     home_address: '',
     bio: '',
     profile_photo_url: '',
+    instagram_url: '',
+    facebook_url: '',
+    linkedin_url: '',
   });
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
@@ -38,6 +42,10 @@ export default function Profile() {
     company_name: '',
     company_website: '',
     office_email: '',
+    office_phone: '',
+    linkedin_url: '',
+    instagram_url: '',
+    facebook_url: '',
   });
 
   useEffect(() => {
@@ -46,9 +54,13 @@ export default function Profile() {
         full_name: personalInfo.full_name || '',
         primary_email: personalInfo.primary_email || '',
         mobile_number: personalInfo.mobile_number || '',
+        phone_number: personalInfo.phone_number || '',
         home_address: typeof personalInfo.home_address === 'string' ? personalInfo.home_address : '',
         bio: personalInfo.bio || '',
         profile_photo_url: personalInfo.profile_photo_url || '',
+        instagram_url: personalInfo.instagram_url || '',
+        facebook_url: personalInfo.facebook_url || '',
+        linkedin_url: personalInfo.linkedin_url || '',
       });
     }
   }, [personalInfo]);
@@ -170,6 +182,10 @@ export default function Profile() {
         company_name: '',
         company_website: '',
         office_email: '',
+        office_phone: '',
+        linkedin_url: '',
+        instagram_url: '',
+        facebook_url: '',
       });
       toast({
         title: "Entry added",
@@ -191,6 +207,10 @@ export default function Profile() {
       company_name: entry.company_name || '',
       company_website: entry.company_website || '',
       office_email: entry.office_email || '',
+        office_phone: entry.office_phone || '',
+        linkedin_url: entry.linkedin_url || '',
+        instagram_url: entry.instagram_url || '',
+        facebook_url: entry.facebook_url || '',
     });
   };
 
@@ -208,6 +228,10 @@ export default function Profile() {
         company_name: '',
         company_website: '',
         office_email: '',
+        office_phone: '',
+        linkedin_url: '',
+        instagram_url: '',
+        facebook_url: '',
       });
       toast({
         title: "Entry updated",
@@ -334,6 +358,17 @@ export default function Profile() {
               </div>
 
               <div>
+                <Label htmlFor="alternateMobile">Alternate Mobile Number</Label>
+                <Input
+                  id="alternateMobile"
+                  type="tel"
+                  value={personalForm.phone_number}
+                  onChange={(e) => setPersonalForm(prev => ({ ...prev, phone_number: e.target.value }))}
+                  placeholder="+1 (555) 987-6543"
+                />
+              </div>
+
+              <div>
                 <Label htmlFor="homeAddress">Home Address</Label>
                 <Input
                   id="homeAddress"
@@ -352,6 +387,42 @@ export default function Profile() {
                   placeholder="Tell us about yourself..."
                   rows={4}
                 />
+              </div>
+
+              <div>
+                <Label>Social Links</Label>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor="instagram" className="text-sm text-muted-foreground">Instagram</Label>
+                    <Input
+                      id="instagram"
+                      type="url"
+                      value={personalForm.instagram_url}
+                      onChange={(e) => setPersonalForm(prev => ({ ...prev, instagram_url: e.target.value }))}
+                      placeholder="https://instagram.com/username"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="facebook" className="text-sm text-muted-foreground">Facebook</Label>
+                    <Input
+                      id="facebook"
+                      type="url"
+                      value={personalForm.facebook_url}
+                      onChange={(e) => setPersonalForm(prev => ({ ...prev, facebook_url: e.target.value }))}
+                      placeholder="https://facebook.com/username"
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <Label htmlFor="personalLinkedin" className="text-sm text-muted-foreground">LinkedIn</Label>
+                    <Input
+                      id="personalLinkedin"
+                      type="url"
+                      value={personalForm.linkedin_url}
+                      onChange={(e) => setPersonalForm(prev => ({ ...prev, linkedin_url: e.target.value }))}
+                      placeholder="https://linkedin.com/in/username"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
           </TabsContent>
@@ -402,6 +473,41 @@ export default function Profile() {
                   onChange={(e) => setProfessionalForm(prev => ({ ...prev, office_email: e.target.value }))}
                   placeholder="john@acme.com"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="officePhone">Office Phone</Label>
+                <Input
+                  id="officePhone"
+                  type="tel"
+                  value={professionalForm.office_phone}
+                  onChange={(e) => setProfessionalForm(prev => ({ ...prev, office_phone: e.target.value }))}
+                  placeholder="+1 (555) 111-2222"
+                />
+              </div>
+
+              <div>
+                <Label>Professional Social Handles</Label>
+                <div className="space-y-4 mt-2">
+                  <Input
+                    type="url"
+                    placeholder="LinkedIn URL"
+                    value={professionalForm.linkedin_url}
+                    onChange={(e) => setProfessionalForm(prev => ({ ...prev, linkedin_url: e.target.value }))}
+                  />
+                  <Input
+                    type="url"
+                    placeholder="Instagram URL"
+                    value={professionalForm.instagram_url}
+                    onChange={(e) => setProfessionalForm(prev => ({ ...prev, instagram_url: e.target.value }))}
+                  />
+                  <Input
+                    type="url"
+                    placeholder="Facebook URL"
+                    value={professionalForm.facebook_url}
+                    onChange={(e) => setProfessionalForm(prev => ({ ...prev, facebook_url: e.target.value }))}
+                  />
+                </div>
               </div>
 
               <Button
@@ -469,6 +575,16 @@ export default function Profile() {
                         Email: {entry.office_email}
                       </p>
                     )}
+                    {entry.office_phone && (
+                      <p className="text-sm text-muted-foreground">
+                        Phone: {entry.office_phone}
+                      </p>
+                    )}
+                    <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                      {entry.linkedin_url && <p>LinkedIn: {entry.linkedin_url}</p>}
+                      {entry.instagram_url && <p>Instagram: {entry.instagram_url}</p>}
+                      {entry.facebook_url && <p>Facebook: {entry.facebook_url}</p>}
+                    </div>
                   </Card>
                 ))
               )}

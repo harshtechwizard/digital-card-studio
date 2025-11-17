@@ -3,7 +3,7 @@ import { usePublicCard } from '@/hooks/usePublicCard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Mail, Phone, Globe, Linkedin, Download, Share2, Loader2 } from 'lucide-react';
+import { Mail, Phone, PhoneCall, Globe, Linkedin, Instagram, Facebook, Download, Share2, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -42,13 +42,15 @@ export default function PublicCard() {
 
   const { card, personalInfo, professionalInfo } = data;
   const fieldsConfig = (card.fields_config as any) || {};
+  type ProfessionalFieldKey = 'linkedin_urls' | 'professional_emails' | 'professional_phones' | 'professional_instagrams' | 'professional_facebooks';
 
   const selectedProfessionalEntries = professionalInfo.filter(
     entry => fieldsConfig.professionalIds?.includes(entry.id)
   );
 
-  const shouldShowLinkedIn = (entryId: string) => {
-    return fieldsConfig.linkedin_urls?.includes(entryId);
+  const shouldShowProfessionalField = (entryId: string, key: ProfessionalFieldKey) => {
+    const list = fieldsConfig[key];
+    return Array.isArray(list) && list.includes(entryId);
   };
 
   const getInitials = () => {
@@ -75,11 +77,20 @@ export default function PublicCard() {
     if (fieldsConfig.mobile_number && personalInfo?.mobile_number) {
       vcf += `TEL:${personalInfo.mobile_number}\n`;
     }
+
+    if (fieldsConfig.alternate_mobile && personalInfo?.phone_number) {
+      vcf += `TEL;TYPE=HOME:${personalInfo.phone_number}\n`;
+    }
     
     selectedProfessionalEntries.forEach(entry => {
       if (entry.designation) vcf += `TITLE:${entry.designation}\n`;
       if (entry.company_name) vcf += `ORG:${entry.company_name}\n`;
-      if (entry.office_email) vcf += `EMAIL;TYPE=WORK:${entry.office_email}\n`;
+      if (entry.office_email && shouldShowProfessionalField(entry.id, 'professional_emails')) {
+        vcf += `EMAIL;TYPE=WORK:${entry.office_email}\n`;
+      }
+      if (entry.office_phone && shouldShowProfessionalField(entry.id, 'professional_phones')) {
+        vcf += `TEL;TYPE=WORK:${entry.office_phone}\n`;
+      }
     });
     
     vcf += 'END:VCARD';
@@ -186,6 +197,75 @@ export default function PublicCard() {
               </div>
             )}
 
+            {fieldsConfig.alternate_mobile && personalInfo?.phone_number && (
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <PhoneCall className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Alternate Phone</p>
+                  <a 
+                    href={`tel:${personalInfo.phone_number}`}
+                    className="text-foreground hover:text-primary transition-colors"
+                  >
+                    {personalInfo.phone_number}
+                  </a>
+                </div>
+              </div>
+            )}
+
+            {(fieldsConfig.social_instagram && personalInfo?.instagram_url) ||
+            (fieldsConfig.social_facebook && personalInfo?.facebook_url) ||
+            (fieldsConfig.social_linkedin && personalInfo?.linkedin_url) ? (
+              <div className="grid gap-3">
+                {fieldsConfig.social_instagram && personalInfo?.instagram_url && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/40">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Instagram className="w-5 h-5 text-primary" />
+                    </div>
+                    <a
+                      href={personalInfo.instagram_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-foreground hover:text-primary transition-colors break-all"
+                    >
+                      {personalInfo.instagram_url}
+                    </a>
+                  </div>
+                )}
+                {fieldsConfig.social_facebook && personalInfo?.facebook_url && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/40">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Facebook className="w-5 h-5 text-primary" />
+                    </div>
+                    <a
+                      href={personalInfo.facebook_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-foreground hover:text-primary transition-colors break-all"
+                    >
+                      {personalInfo.facebook_url}
+                    </a>
+                  </div>
+                )}
+                {fieldsConfig.social_linkedin && personalInfo?.linkedin_url && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/40">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Linkedin className="w-5 h-5 text-primary" />
+                    </div>
+                    <a
+                      href={personalInfo.linkedin_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-foreground hover:text-primary transition-colors break-all"
+                    >
+                      {personalInfo.linkedin_url}
+                    </a>
+                  </div>
+                )}
+              </div>
+            ) : null}
+
             {selectedProfessionalEntries.map((entry) => (
               <div key={entry.id}>
                 {entry.company_website && (
@@ -207,7 +287,41 @@ export default function PublicCard() {
                   </div>
                 )}
 
-                {entry.linkedin_url && shouldShowLinkedIn(entry.id) && (
+                {entry.office_email && shouldShowProfessionalField(entry.id, 'professional_emails') && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 mt-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Mail className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Work Email</p>
+                      <a 
+                        href={`mailto:${entry.office_email}`}
+                        className="text-foreground hover:text-primary transition-colors break-all"
+                      >
+                        {entry.office_email}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {entry.office_phone && shouldShowProfessionalField(entry.id, 'professional_phones') && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 mt-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Phone className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Work Phone</p>
+                      <a 
+                        href={`tel:${entry.office_phone}`}
+                        className="text-foreground hover:text-primary transition-colors break-all"
+                      >
+                        {entry.office_phone}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {entry.linkedin_url && shouldShowProfessionalField(entry.id, 'linkedin_urls') && (
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 mt-4">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <Linkedin className="w-5 h-5 text-primary" />
@@ -221,6 +335,44 @@ export default function PublicCard() {
                         className="text-foreground hover:text-primary transition-colors break-all"
                       >
                         {entry.linkedin_url}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {entry.instagram_url && shouldShowProfessionalField(entry.id, 'professional_instagrams') && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 mt-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Instagram className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Instagram</p>
+                      <a 
+                        href={entry.instagram_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-foreground hover:text-primary transition-colors break-all"
+                      >
+                        {entry.instagram_url}
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {entry.facebook_url && shouldShowProfessionalField(entry.id, 'professional_facebooks') && (
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 mt-4">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <Facebook className="w-5 h-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">Facebook</p>
+                      <a 
+                        href={entry.facebook_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-foreground hover:text-primary transition-colors break-all"
+                      >
+                        {entry.facebook_url}
                       </a>
                     </div>
                   </div>

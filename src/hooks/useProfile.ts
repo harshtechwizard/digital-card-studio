@@ -97,8 +97,12 @@ export function useProfile() {
         full_name: data.full_name.trim(),
         primary_email: data.primary_email !== undefined ? (data.primary_email?.trim() || null) : (existing?.primary_email || null),
         mobile_number: data.mobile_number !== undefined ? (data.mobile_number?.trim() || null) : (existing?.mobile_number || null),
+        phone_number: data.phone_number !== undefined ? (data.phone_number?.trim() || null) : (existing?.phone_number || null),
         bio: data.bio !== undefined ? (data.bio?.trim() || null) : (existing?.bio || null),
         home_address: homeAddress,
+        instagram_url: data.instagram_url !== undefined ? (data.instagram_url?.trim() || null) : (existing?.instagram_url || null),
+        facebook_url: data.facebook_url !== undefined ? (data.facebook_url?.trim() || null) : (existing?.facebook_url || null),
+        linkedin_url: data.linkedin_url !== undefined ? (data.linkedin_url?.trim() || null) : (existing?.linkedin_url || null),
         profile_photo_url: data.profile_photo_url !== undefined
           ? (data.profile_photo_url?.trim() || null)
           : (existing?.profile_photo_url || null),
@@ -109,7 +113,6 @@ export function useProfile() {
       if (existing) {
         if (data.date_of_birth === undefined) payload.date_of_birth = existing.date_of_birth;
         if (data.secondary_email === undefined) payload.secondary_email = existing.secondary_email;
-        if (data.phone_number === undefined) payload.phone_number = existing.phone_number;
         if (data.profile_photo_url === undefined) payload.profile_photo_url = existing.profile_photo_url;
       }
 
@@ -121,12 +124,15 @@ export function useProfile() {
           full_name: payload.full_name,
           primary_email: payload.primary_email,
           mobile_number: payload.mobile_number,
+          phone_number: payload.phone_number,
           bio: payload.bio,
           home_address: payload.home_address,
           updated_at: payload.updated_at,
           date_of_birth: payload.date_of_birth,
           secondary_email: payload.secondary_email,
-          phone_number: payload.phone_number,
+          instagram_url: payload.instagram_url,
+          facebook_url: payload.facebook_url,
+          linkedin_url: payload.linkedin_url,
           profile_photo_url: payload.profile_photo_url,
         };
         const { error: updateError } = await (supabase

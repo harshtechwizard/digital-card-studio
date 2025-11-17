@@ -21,6 +21,9 @@ export interface Database {
           phone_number: string | null
           home_address: Json | null
           bio: string | null
+          instagram_url: string | null
+          facebook_url: string | null
+          linkedin_url: string | null
           profile_photo_url: string | null
           created_at: string
           updated_at: string
@@ -36,6 +39,9 @@ export interface Database {
           phone_number?: string | null
           home_address?: Json | null
           bio?: string | null
+          instagram_url?: string | null
+          facebook_url?: string | null
+          linkedin_url?: string | null
           profile_photo_url?: string | null
           created_at?: string
           updated_at?: string
@@ -51,6 +57,9 @@ export interface Database {
           phone_number?: string | null
           home_address?: Json | null
           bio?: string | null
+          instagram_url?: string | null
+          facebook_url?: string | null
+          linkedin_url?: string | null
           profile_photo_url?: string | null
           created_at?: string
           updated_at?: string
@@ -67,6 +76,8 @@ export interface Database {
           office_email: string | null
           office_phone: string | null
           department: string | null
+          instagram_url: string | null
+          facebook_url: string | null
           linkedin_url: string | null
           is_primary: boolean
           created_at: string
@@ -82,6 +93,8 @@ export interface Database {
           office_email?: string | null
           office_phone?: string | null
           department?: string | null
+          instagram_url?: string | null
+          facebook_url?: string | null
           linkedin_url?: string | null
           is_primary?: boolean
           created_at?: string
@@ -97,6 +110,8 @@ export interface Database {
           office_email?: string | null
           office_phone?: string | null
           department?: string | null
+          instagram_url?: string | null
+          facebook_url?: string | null
           linkedin_url?: string | null
           is_primary?: boolean
           created_at?: string

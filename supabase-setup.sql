@@ -16,6 +16,9 @@ CREATE TABLE personal_info (
   phone_number TEXT,
   home_address JSONB,
   bio TEXT,
+  instagram_url TEXT,
+  facebook_url TEXT,
+  linkedin_url TEXT,
   profile_photo_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -32,6 +35,8 @@ CREATE TABLE professional_info (
   office_email TEXT,
   office_phone TEXT,
   department TEXT,
+  instagram_url TEXT,
+  facebook_url TEXT,
   linkedin_url TEXT,
   is_primary BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW(),
