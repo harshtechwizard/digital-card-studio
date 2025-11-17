@@ -1,8 +1,8 @@
-import { useCards } from '@/hooks/useCards';
+import { useBusinessCards } from '@/hooks/useBusinessCards';
 import { Button } from '@/components/ui/button';
 import { Card as UICard, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Share2, Settings, Trash2 } from 'lucide-react';
+import { Plus, Share2, Settings, Trash2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
 import {
@@ -28,7 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function MyCards() {
-  const { cards, deleteCard } = useCards();
+  const { cards, loading, error, deleteCard } = useBusinessCards();
   const navigate = useNavigate();
 
   const handleShare = (slug: string) => {
@@ -40,13 +40,43 @@ export default function MyCards() {
     });
   };
 
-  const handleDelete = (id: string) => {
-    deleteCard(id);
-    toast({
-      title: "Card deleted",
-      description: "Your business card has been deleted.",
-    });
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteCard(id);
+      toast({
+        title: "Card deleted",
+        description: "Your business card has been deleted.",
+      });
+    } catch (err) {
+      toast({
+        title: "Error",
+        description: "Failed to delete card",
+        variant: "destructive",
+      });
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading your cards...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-500 mb-4">Error: {error}</p>
+          <Button onClick={() => window.location.reload()}>Retry</Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -84,7 +114,7 @@ export default function MyCards() {
                       <h3 className="text-lg font-semibold text-foreground">{card.name}</h3>
                       <p className="text-sm text-muted-foreground">/{card.slug}</p>
                     </div>
-                    {card.isDefault && (
+                    {card.is_default && (
                       <Badge variant="secondary">Default</Badge>
                     )}
                   </div>

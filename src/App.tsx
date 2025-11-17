@@ -2,16 +2,46 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { NavLink } from "@/components/NavLink";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import MyCards from "./pages/MyCards";
 import CardCreator from "./pages/CardCreator";
 import PublicCard from "./pages/PublicCard";
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
+
+function AppNav() {
+  const { user, signOut } = useAuth();
+
+  return (
+    <nav className="border-b border-border bg-card">
+      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+        <div className="flex gap-2">
+          <NavLink to="/my-cards">My Cards</NavLink>
+          <NavLink to="/profile">Profile</NavLink>
+          <NavLink to="/">Templates</NavLink>
+        </div>
+        {user && (
+          <div className="flex items-center gap-4">
+            <span className="text-sm text-muted-foreground">{user.email}</span>
+            <Button variant="outline" size="sm" onClick={() => signOut()}>
+              Sign Out
+            </Button>
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+}
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -19,31 +49,31 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          {/* Public card route without navigation */}
-          <Route path="/card/:slug" element={<PublicCard />} />
-          
-          {/* Main app routes with navigation */}
-          <Route path="/*" element={
-            <div className="min-h-screen bg-background">
-              <nav className="border-b border-border bg-card">
-                <div className="container mx-auto px-4 py-3 flex gap-2">
-                  <NavLink to="/my-cards">My Cards</NavLink>
-                  <NavLink to="/profile">Profile</NavLink>
-                  <NavLink to="/">Templates</NavLink>
+        <AuthProvider>
+          <Routes>
+            {/* Public routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            <Route path="/card/:slug" element={<PublicCard />} />
+            
+            {/* Protected routes with navigation */}
+            <Route path="/*" element={
+              <ProtectedRoute>
+                <div className="min-h-screen bg-background">
+                  <AppNav />
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/my-cards" element={<MyCards />} />
+                    <Route path="/cards/new" element={<CardCreator />} />
+                    <Route path="/cards/edit/:id" element={<CardCreator />} />
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
                 </div>
-              </nav>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/my-cards" element={<MyCards />} />
-                <Route path="/cards/new" element={<CardCreator />} />
-                <Route path="/cards/edit/:id" element={<CardCreator />} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
-          } />
-        </Routes>
+              </ProtectedRoute>
+            } />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>

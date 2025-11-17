@@ -1,35 +1,48 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useCards } from '@/hooks/useCards';
+import { useBusinessCards } from '@/hooks/useBusinessCards';
 import { useProfile } from '@/hooks/useProfile';
-import { Card, defaultFieldSelection } from '@/types/card';
+import { generateUniqueSlug } from '@/lib/slugify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card as UICard, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 
 export default function CardCreator() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { cards, addCard, updateCard } = useCards();
-  const { profile } = useProfile();
+  const { cards, loading: cardsLoading, addCard, updateCard } = useBusinessCards();
+  const { personalInfo, professionalInfo, loading: profileLoading } = useProfile();
   
   const [cardName, setCardName] = useState('');
   const [slug, setSlug] = useState('');
-  const [fieldSelection, setFieldSelection] = useState(defaultFieldSelection);
-  const [isDefault, setIsDefault] = useState(false);
+  const [selectedFields, setSelectedFields] = useState({
+    full_name: true,
+    primary_email: true,
+    mobile_number: false,
+    bio: false,
+    professionalIds: [] as string[],
+  });
 
   useEffect(() => {
-    if (id) {
+    if (id && cards.length > 0) {
       const card = cards.find(c => c.id === id);
       if (card) {
         setCardName(card.name);
         setSlug(card.slug);
-        setFieldSelection(card.fieldSelection);
-        setIsDefault(card.isDefault);
+        const config = card.fields_config as any;
+        if (config) {
+          setSelectedFields({
+            full_name: config.full_name ?? true,
+            primary_email: config.primary_email ?? true,
+            mobile_number: config.mobile_number ?? false,
+            bio: config.bio ?? false,
+            professionalIds: config.professionalIds || [],
+          });
+        }
       }
     }
   }, [id, cards]);
@@ -39,24 +52,16 @@ export default function CardCreator() {
     setSlug(sanitized);
   };
 
-  const toggleField = (field: keyof typeof fieldSelection) => {
-    if (field === 'professionalEntries') return;
-    setFieldSelection(prev => ({
+  const toggleProfessional = (profId: string) => {
+    setSelectedFields(prev => ({
       ...prev,
-      [field]: !prev[field],
+      professionalIds: prev.professionalIds.includes(profId)
+        ? prev.professionalIds.filter(id => id !== profId)
+        : [...prev.professionalIds, profId],
     }));
   };
 
-  const toggleProfessionalEntry = (entryId: string) => {
-    setFieldSelection(prev => ({
-      ...prev,
-      professionalEntries: prev.professionalEntries.includes(entryId)
-        ? prev.professionalEntries.filter(id => id !== entryId)
-        : [...prev.professionalEntries, entryId],
-    }));
-  };
-
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!cardName || !slug) {
       toast({
         title: "Missing fields",
@@ -77,32 +82,50 @@ export default function CardCreator() {
       return;
     }
 
-    if (id) {
-      updateCard(id, {
-        name: cardName,
-        slug,
-        fieldSelection,
-        isDefault,
-      });
+    try {
+      if (id) {
+        await updateCard(id, {
+          name: cardName,
+          slug,
+          fields_config: selectedFields,
+        });
+        toast({
+          title: "Card updated",
+          description: "Your business card has been updated.",
+        });
+      } else {
+        await addCard({
+          name: cardName,
+          slug: slug || generateUniqueSlug(cardName),
+          fields_config: selectedFields,
+          design_config: { theme: 'light' },
+          is_active: true,
+        });
+        toast({
+          title: "Card created",
+          description: "Your business card has been created.",
+        });
+      }
+      navigate('/my-cards');
+    } catch (err) {
       toast({
-        title: "Card updated",
-        description: "Your business card has been updated.",
-      });
-    } else {
-      addCard({
-        name: cardName,
-        slug,
-        fieldSelection,
-        isDefault,
-      });
-      toast({
-        title: "Card created",
-        description: "Your business card has been created.",
+        title: "Error",
+        description: "Failed to save card",
+        variant: "destructive",
       });
     }
-
-    navigate('/my-cards');
   };
+
+  if (cardsLoading || profileLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -149,17 +172,6 @@ export default function CardCreator() {
                   Your card will be available at: {window.location.origin}/card/{slug || 'your-slug'}
                 </p>
               </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="isDefault"
-                  checked={isDefault}
-                  onCheckedChange={(checked) => setIsDefault(checked as boolean)}
-                />
-                <Label htmlFor="isDefault" className="cursor-pointer">
-                  Set as default card
-                </Label>
-              </div>
             </CardContent>
           </UICard>
 
@@ -174,53 +186,42 @@ export default function CardCreator() {
                 <div className="space-y-2">
                   <div className="flex items-center space-x-2">
                     <Checkbox
-                      id="fullName"
-                      checked={fieldSelection.fullName}
-                      onCheckedChange={() => toggleField('fullName')}
+                      id="full_name"
+                      checked={selectedFields.full_name}
+                      onCheckedChange={(checked) => setSelectedFields(prev => ({ ...prev, full_name: checked as boolean }))}
                     />
-                    <Label htmlFor="fullName" className="cursor-pointer">
-                      Full Name {profile.fullName && <span className="text-muted-foreground">({profile.fullName})</span>}
+                    <Label htmlFor="full_name" className="cursor-pointer">
+                      Full Name {personalInfo?.full_name && <span className="text-muted-foreground">({personalInfo.full_name})</span>}
                     </Label>
                   </div>
 
                   <div className="flex items-center space-x-2">
                     <Checkbox
-                      id="primaryEmail"
-                      checked={fieldSelection.primaryEmail}
-                      onCheckedChange={() => toggleField('primaryEmail')}
+                      id="primary_email"
+                      checked={selectedFields.primary_email}
+                      onCheckedChange={(checked) => setSelectedFields(prev => ({ ...prev, primary_email: checked as boolean }))}
                     />
-                    <Label htmlFor="primaryEmail" className="cursor-pointer">
-                      Primary Email {profile.primaryEmail && <span className="text-muted-foreground">({profile.primaryEmail})</span>}
+                    <Label htmlFor="primary_email" className="cursor-pointer">
+                      Primary Email {personalInfo?.primary_email && <span className="text-muted-foreground">({personalInfo.primary_email})</span>}
                     </Label>
                   </div>
 
                   <div className="flex items-center space-x-2">
                     <Checkbox
-                      id="mobileNumber"
-                      checked={fieldSelection.mobileNumber}
-                      onCheckedChange={() => toggleField('mobileNumber')}
+                      id="mobile_number"
+                      checked={selectedFields.mobile_number}
+                      onCheckedChange={(checked) => setSelectedFields(prev => ({ ...prev, mobile_number: checked as boolean }))}
                     />
-                    <Label htmlFor="mobileNumber" className="cursor-pointer">
-                      Mobile Number {profile.mobileNumber && <span className="text-muted-foreground">({profile.mobileNumber})</span>}
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="homeAddress"
-                      checked={fieldSelection.homeAddress}
-                      onCheckedChange={() => toggleField('homeAddress')}
-                    />
-                    <Label htmlFor="homeAddress" className="cursor-pointer">
-                      Home Address {profile.homeAddress && <span className="text-muted-foreground">({profile.homeAddress})</span>}
+                    <Label htmlFor="mobile_number" className="cursor-pointer">
+                      Mobile Number {personalInfo?.mobile_number && <span className="text-muted-foreground">({personalInfo.mobile_number})</span>}
                     </Label>
                   </div>
 
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="bio"
-                      checked={fieldSelection.bio}
-                      onCheckedChange={() => toggleField('bio')}
+                      checked={selectedFields.bio}
+                      onCheckedChange={(checked) => setSelectedFields(prev => ({ ...prev, bio: checked as boolean }))}
                     />
                     <Label htmlFor="bio" className="cursor-pointer">
                       Bio
@@ -231,64 +232,26 @@ export default function CardCreator() {
 
               <div>
                 <h3 className="font-semibold mb-3">Professional Information</h3>
-                {profile.professionalEntries.length === 0 ? (
+                {professionalInfo.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
                     No professional entries yet. Add them in your profile.
                   </p>
                 ) : (
                   <div className="space-y-2">
-                    {profile.professionalEntries.map((entry) => (
+                    {professionalInfo.map((entry) => (
                       <div key={entry.id} className="flex items-center space-x-2">
                         <Checkbox
                           id={entry.id}
-                          checked={fieldSelection.professionalEntries.includes(entry.id)}
-                          onCheckedChange={() => toggleProfessionalEntry(entry.id)}
+                          checked={selectedFields.professionalIds.includes(entry.id)}
+                          onCheckedChange={() => toggleProfessional(entry.id)}
                         />
                         <Label htmlFor={entry.id} className="cursor-pointer">
-                          {entry.jobTitle} at {entry.companyName}
+                          {entry.designation} at {entry.company_name}
                         </Label>
                       </div>
                     ))}
                   </div>
                 )}
-              </div>
-
-              <div>
-                <h3 className="font-semibold mb-3">Links & Socials</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="linkedinUrl"
-                      checked={fieldSelection.linkedinUrl}
-                      onCheckedChange={() => toggleField('linkedinUrl')}
-                    />
-                    <Label htmlFor="linkedinUrl" className="cursor-pointer">
-                      LinkedIn
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="twitterUrl"
-                      checked={fieldSelection.twitterUrl}
-                      onCheckedChange={() => toggleField('twitterUrl')}
-                    />
-                    <Label htmlFor="twitterUrl" className="cursor-pointer">
-                      Twitter/X
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="personalWebsite"
-                      checked={fieldSelection.personalWebsite}
-                      onCheckedChange={() => toggleField('personalWebsite')}
-                    />
-                    <Label htmlFor="personalWebsite" className="cursor-pointer">
-                      Personal Website
-                    </Label>
-                  </div>
-                </div>
               </div>
             </CardContent>
           </UICard>

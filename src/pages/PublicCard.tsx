@@ -1,10 +1,9 @@
 import { useParams } from 'react-router-dom';
-import { useCards } from '@/hooks/useCards';
-import { useProfile } from '@/hooks/useProfile';
+import { usePublicCard } from '@/hooks/usePublicCard';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Mail, Phone, Globe, Linkedin, Twitter, Download, Share2 } from 'lucide-react';
+import { Mail, Phone, Globe, Linkedin, Download, Share2, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import {
   Dialog,
@@ -17,12 +16,20 @@ import {
 
 export default function PublicCard() {
   const { slug } = useParams();
-  const { getCardBySlug } = useCards();
-  const { profile } = useProfile();
+  const { data, loading, error } = usePublicCard(slug!);
 
-  const card = getCardBySlug(slug || '');
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading card...</p>
+        </div>
+      </div>
+    );
+  }
 
-  if (!card) {
+  if (error || !data) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
@@ -33,15 +40,16 @@ export default function PublicCard() {
     );
   }
 
-  const { fieldSelection } = card;
+  const { card, personalInfo, professionalInfo } = data;
+  const fieldsConfig = (card.fields_config as any) || {};
 
-  const selectedProfessionalEntries = profile.professionalEntries.filter(
-    entry => fieldSelection.professionalEntries.includes(entry.id)
+  const selectedProfessionalEntries = professionalInfo.filter(
+    entry => fieldsConfig.professionalIds?.includes(entry.id)
   );
 
   const getInitials = () => {
-    if (!fieldSelection.fullName || !profile.fullName) return 'BC';
-    return profile.fullName
+    if (!personalInfo?.full_name) return 'BC';
+    return personalInfo.full_name
       .split(' ')
       .map(n => n[0])
       .join('')
@@ -52,30 +60,22 @@ export default function PublicCard() {
   const generateVCF = () => {
     let vcf = 'BEGIN:VCARD\nVERSION:3.0\n';
     
-    if (fieldSelection.fullName && profile.fullName) {
-      vcf += `FN:${profile.fullName}\n`;
+    if (fieldsConfig.full_name && personalInfo?.full_name) {
+      vcf += `FN:${personalInfo.full_name}\n`;
     }
     
-    if (fieldSelection.primaryEmail && profile.primaryEmail) {
-      vcf += `EMAIL:${profile.primaryEmail}\n`;
+    if (fieldsConfig.primary_email && personalInfo?.primary_email) {
+      vcf += `EMAIL:${personalInfo.primary_email}\n`;
     }
     
-    if (fieldSelection.mobileNumber && profile.mobileNumber) {
-      vcf += `TEL:${profile.mobileNumber}\n`;
-    }
-    
-    if (fieldSelection.homeAddress && profile.homeAddress) {
-      vcf += `ADR:;;${profile.homeAddress}\n`;
-    }
-    
-    if (fieldSelection.personalWebsite && profile.personalWebsite) {
-      vcf += `URL:${profile.personalWebsite}\n`;
+    if (fieldsConfig.mobile_number && personalInfo?.mobile_number) {
+      vcf += `TEL:${personalInfo.mobile_number}\n`;
     }
     
     selectedProfessionalEntries.forEach(entry => {
-      vcf += `TITLE:${entry.jobTitle}\n`;
-      vcf += `ORG:${entry.companyName}\n`;
-      if (entry.officeEmail) vcf += `EMAIL;TYPE=WORK:${entry.officeEmail}\n`;
+      if (entry.designation) vcf += `TITLE:${entry.designation}\n`;
+      if (entry.company_name) vcf += `ORG:${entry.company_name}\n`;
+      if (entry.office_email) vcf += `EMAIL;TYPE=WORK:${entry.office_email}\n`;
     });
     
     vcf += 'END:VCARD';
@@ -84,7 +84,7 @@ export default function PublicCard() {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${profile.fullName || 'contact'}.vcf`;
+    link.download = `${personalInfo?.full_name || 'contact'}.vcf`;
     link.click();
     
     toast({
@@ -114,86 +114,62 @@ export default function PublicCard() {
           </Avatar>
 
           {/* Name */}
-          {fieldSelection.fullName && profile.fullName && (
+          {fieldsConfig.full_name && personalInfo?.full_name && (
             <h1 className="text-2xl font-bold text-foreground mb-2">
-              {profile.fullName}
+              {personalInfo.full_name}
             </h1>
           )}
 
           {/* Professional Info */}
           {selectedProfessionalEntries.map((entry) => (
             <div key={entry.id} className="mb-4">
-              <p className="text-lg text-foreground font-medium">{entry.jobTitle}</p>
-              <p className="text-muted-foreground">{entry.companyName}</p>
+              <p className="text-lg text-foreground font-medium">{entry.designation}</p>
+              <p className="text-muted-foreground">{entry.company_name}</p>
             </div>
           ))}
 
           {/* Bio */}
-          {fieldSelection.bio && profile.bio && (
+          {fieldsConfig.bio && personalInfo?.bio && (
             <p className="text-sm text-muted-foreground mb-6 mt-4">
-              {profile.bio}
+              {personalInfo.bio}
             </p>
           )}
 
           {/* Contact Methods */}
           <div className="flex flex-wrap justify-center gap-2 mb-6">
-            {fieldSelection.primaryEmail && profile.primaryEmail && (
+            {fieldsConfig.primary_email && personalInfo?.primary_email && (
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => window.location.href = `mailto:${profile.primaryEmail}`}
+                onClick={() => window.location.href = `mailto:${personalInfo.primary_email}`}
               >
                 <Mail className="w-4 h-4" />
               </Button>
             )}
 
-            {fieldSelection.mobileNumber && profile.mobileNumber && (
+            {fieldsConfig.mobile_number && personalInfo?.mobile_number && (
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => window.location.href = `tel:${profile.mobileNumber}`}
+                onClick={() => window.location.href = `tel:${personalInfo.mobile_number}`}
               >
                 <Phone className="w-4 h-4" />
               </Button>
             )}
 
-            {fieldSelection.personalWebsite && profile.personalWebsite && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => window.open(profile.personalWebsite, '_blank')}
-              >
-                <Globe className="w-4 h-4" />
-              </Button>
-            )}
-
-            {fieldSelection.linkedinUrl && profile.linkedinUrl && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => window.open(profile.linkedinUrl, '_blank')}
-              >
-                <Linkedin className="w-4 h-4" />
-              </Button>
-            )}
-
-            {fieldSelection.twitterUrl && profile.twitterUrl && (
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => window.open(profile.twitterUrl, '_blank')}
-              >
-                <Twitter className="w-4 h-4" />
-              </Button>
-            )}
+            {selectedProfessionalEntries.map((entry) => (
+              entry.linkedin_url && (
+                <Button
+                  key={entry.id}
+                  variant="outline"
+                  size="icon"
+                  onClick={() => window.open(entry.linkedin_url!, '_blank')}
+                >
+                  <Linkedin className="w-4 h-4" />
+                </Button>
+              )
+            ))}
           </div>
-
-          {/* Address */}
-          {fieldSelection.homeAddress && profile.homeAddress && (
-            <p className="text-sm text-muted-foreground mb-6">
-              {profile.homeAddress}
-            </p>
-          )}
 
           {/* Action Buttons */}
           <div className="space-y-3">
