@@ -24,7 +24,9 @@ export default function CardCreator() {
     primary_email: true,
     mobile_number: false,
     bio: false,
+    profile_photo_url: false,
     professionalIds: [] as string[],
+    linkedin_urls: [] as string[], // Track which professionals' LinkedIn to show
   });
 
   useEffect(() => {
@@ -40,7 +42,9 @@ export default function CardCreator() {
             primary_email: config.primary_email ?? true,
             mobile_number: config.mobile_number ?? false,
             bio: config.bio ?? false,
+            profile_photo_url: config.profile_photo_url ?? false,
             professionalIds: config.professionalIds || [],
+            linkedin_urls: config.linkedin_urls || [],
           });
         }
       }
@@ -58,6 +62,15 @@ export default function CardCreator() {
       professionalIds: prev.professionalIds.includes(profId)
         ? prev.professionalIds.filter(id => id !== profId)
         : [...prev.professionalIds, profId],
+    }));
+  };
+
+  const toggleLinkedIn = (profId: string) => {
+    setSelectedFields(prev => ({
+      ...prev,
+      linkedin_urls: prev.linkedin_urls.includes(profId)
+        ? prev.linkedin_urls.filter(id => id !== profId)
+        : [...prev.linkedin_urls, profId],
     }));
   };
 
@@ -227,6 +240,17 @@ export default function CardCreator() {
                       Bio
                     </Label>
                   </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="profile_photo_url"
+                      checked={selectedFields.profile_photo_url}
+                      onCheckedChange={(checked) => setSelectedFields(prev => ({ ...prev, profile_photo_url: checked as boolean }))}
+                    />
+                    <Label htmlFor="profile_photo_url" className="cursor-pointer">
+                      Profile Photo
+                    </Label>
+                  </div>
                 </div>
               </div>
 
@@ -237,17 +261,36 @@ export default function CardCreator() {
                     No professional entries yet. Add them in your profile.
                   </p>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-4">
                     {professionalInfo.map((entry) => (
-                      <div key={entry.id} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={entry.id}
-                          checked={selectedFields.professionalIds.includes(entry.id)}
-                          onCheckedChange={() => toggleProfessional(entry.id)}
-                        />
-                        <Label htmlFor={entry.id} className="cursor-pointer">
-                          {entry.designation} at {entry.company_name}
-                        </Label>
+                      <div key={entry.id} className="border border-border rounded-lg p-3 space-y-2">
+                        <div className="flex items-center space-x-2">
+                          <Checkbox
+                            id={entry.id}
+                            checked={selectedFields.professionalIds.includes(entry.id)}
+                            onCheckedChange={() => toggleProfessional(entry.id)}
+                          />
+                          <Label htmlFor={entry.id} className="cursor-pointer font-medium">
+                            {entry.designation} at {entry.company_name}
+                          </Label>
+                        </div>
+                        
+                        {entry.linkedin_url && (
+                          <div className="flex items-center space-x-2 ml-6">
+                            <Checkbox
+                              id={`linkedin-${entry.id}`}
+                              checked={selectedFields.linkedin_urls.includes(entry.id)}
+                              onCheckedChange={() => toggleLinkedIn(entry.id)}
+                              disabled={!selectedFields.professionalIds.includes(entry.id)}
+                            />
+                            <Label 
+                              htmlFor={`linkedin-${entry.id}`} 
+                              className={`cursor-pointer text-sm ${!selectedFields.professionalIds.includes(entry.id) ? 'text-muted-foreground' : ''}`}
+                            >
+                              Show LinkedIn Profile
+                            </Label>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

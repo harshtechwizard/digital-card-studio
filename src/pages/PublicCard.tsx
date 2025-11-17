@@ -47,6 +47,10 @@ export default function PublicCard() {
     entry => fieldsConfig.professionalIds?.includes(entry.id)
   );
 
+  const shouldShowLinkedIn = (entryId: string) => {
+    return fieldsConfig.linkedin_urls?.includes(entryId);
+  };
+
   const getInitials = () => {
     if (!personalInfo?.full_name) return 'BC';
     return personalInfo.full_name
@@ -108,9 +112,17 @@ export default function PublicCard() {
         <div className="p-8 text-center">
           {/* Avatar */}
           <Avatar className="w-24 h-24 mx-auto mb-4">
-            <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
-              {getInitials()}
-            </AvatarFallback>
+            {fieldsConfig.profile_photo_url && personalInfo?.profile_photo_url ? (
+              <img 
+                src={personalInfo.profile_photo_url} 
+                alt={personalInfo.full_name || 'Profile'} 
+                className="object-cover"
+              />
+            ) : (
+              <AvatarFallback className="text-2xl bg-primary text-primary-foreground">
+                {getInitials()}
+              </AvatarFallback>
+            )}
           </Avatar>
 
           {/* Name */}
