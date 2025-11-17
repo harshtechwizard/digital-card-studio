@@ -1,20 +1,25 @@
 import { useState, useEffect } from 'react';
 import { useProfile } from '@/hooks/useProfile';
+import { useAuth } from '@/contexts/AuthContext';
 import { Database } from '@/types/database';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { toast } from '@/hooks/use-toast';
-import { Pencil, Trash2, Plus, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, Plus, Loader2, X } from 'lucide-react';
+import { supabase } from '@/lib/supabase/client';
+import { ChangeEvent } from 'react';
 
 type PersonalInfo = Database['public']['Tables']['personal_info']['Row'];
 type ProfessionalInfo = Database['public']['Tables']['professional_info']['Row'];
 
 export default function Profile() {
   const { personalInfo, professionalInfo, loading, error, savePersonalInfo, saveProfessionalInfo, deleteProfessionalInfo } = useProfile();
+  const { user } = useAuth();
   
   const [personalForm, setPersonalForm] = useState({
     full_name: '',
@@ -22,7 +27,10 @@ export default function Profile() {
     mobile_number: '',
     home_address: '',
     bio: '',
+    profile_photo_url: '',
   });
+
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
 
   const [editingProfessional, setEditingProfessional] = useState<string | null>(null);
   const [professionalForm, setProfessionalForm] = useState({
@@ -40,9 +48,84 @@ export default function Profile() {
         mobile_number: personalInfo.mobile_number || '',
         home_address: typeof personalInfo.home_address === 'string' ? personalInfo.home_address : '',
         bio: personalInfo.bio || '',
+        profile_photo_url: personalInfo.profile_photo_url || '',
       });
     }
   }, [personalInfo]);
+
+  const handlePhotoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to upload a profile photo.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 2 MB.",
+        variant: "destructive",
+      });
+      event.target.value = '';
+      return;
+    }
+
+    try {
+      setUploadingPhoto(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `profile-${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('profile-photos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from('profile-photos')
+        .getPublicUrl(filePath);
+
+      setPersonalForm(prev => ({
+        ...prev,
+        profile_photo_url: data.publicUrl,
+      }));
+
+      toast({
+        title: "Photo uploaded",
+        description: "Your profile photo has been updated.",
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to upload photo';
+      toast({
+        title: "Upload error",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingPhoto(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPersonalForm(prev => ({
+      ...prev,
+      profile_photo_url: '',
+    }));
+  };
 
   const handleSavePersonal = async () => {
     if (!personalForm.full_name || personalForm.full_name.trim() === '') {
@@ -172,14 +255,52 @@ export default function Profile() {
         <h1 className="text-3xl font-bold text-foreground mb-8">Manage Your Information</h1>
         
         <Tabs defaultValue="personal" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 mb-8">
+          <TabsList className="grid w-full grid-cols-2 mb-8">
             <TabsTrigger value="personal">Personal</TabsTrigger>
             <TabsTrigger value="professional">Professional</TabsTrigger>
-            <TabsTrigger value="links">Links & Socials</TabsTrigger>
           </TabsList>
 
           <TabsContent value="personal" className="space-y-6">
             <div className="space-y-4">
+              <div>
+                <Label>Profile Photo</Label>
+                <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center">
+                  <Avatar className="w-20 h-20 border border-border">
+                    {personalForm.profile_photo_url ? (
+                      <AvatarImage src={personalForm.profile_photo_url} alt="Profile photo" className="object-cover" />
+                    ) : (
+                      <AvatarFallback className="text-xs text-muted-foreground">
+                        Add Photo
+                      </AvatarFallback>
+                    )}
+                  </Avatar>
+                  <div className="space-y-2 w-full">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handlePhotoUpload}
+                      disabled={uploadingPhoto}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      JPG, PNG, or WEBP. Max 2 MB.
+                    </p>
+                    {personalForm.profile_photo_url && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemovePhoto}
+                        disabled={uploadingPhoto}
+                        className="w-fit"
+                      >
+                        <X className="w-4 h-4 mr-2" />
+                        Remove photo
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <Label htmlFor="fullName">Full Name</Label>
                 <Input
@@ -354,11 +475,6 @@ export default function Profile() {
             </div>
           </TabsContent>
 
-          <TabsContent value="links" className="space-y-6">
-            <p className="text-sm text-muted-foreground">
-              Social links will be added in a future update. For now, you can add your LinkedIn URL in the professional info section.
-            </p>
-          </TabsContent>
         </Tabs>
       </div>
 

@@ -99,6 +99,9 @@ export function useProfile() {
         mobile_number: data.mobile_number !== undefined ? (data.mobile_number?.trim() || null) : (existing?.mobile_number || null),
         bio: data.bio !== undefined ? (data.bio?.trim() || null) : (existing?.bio || null),
         home_address: homeAddress,
+        profile_photo_url: data.profile_photo_url !== undefined
+          ? (data.profile_photo_url?.trim() || null)
+          : (existing?.profile_photo_url || null),
         updated_at: new Date().toISOString(),
       };
 
