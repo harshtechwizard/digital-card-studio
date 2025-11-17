@@ -230,15 +230,15 @@ export default function PublicCard() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex gap-3">
-            <Button onClick={generateVCF} className="flex-1" size="lg">
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <Button onClick={generateVCF} className="w-full sm:flex-1" size="lg">
               <Download className="w-4 h-4 mr-2" />
               Save Contact
             </Button>
 
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant="outline" className="flex-1" size="lg">
+                <Button variant="outline" className="w-full sm:flex-1" size="lg">
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </Button>
