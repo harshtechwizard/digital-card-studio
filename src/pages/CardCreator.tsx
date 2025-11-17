@@ -8,8 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card as UICard, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Mail, Phone, Globe, Linkedin, ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { ArrowLeft, Loader2 } from 'lucide-react';
 
 export default function CardCreator() {
   const { id } = useParams();
@@ -140,9 +142,27 @@ export default function CardCreator() {
     );
   }
 
+  const getInitials = () => {
+    if (!personalInfo?.full_name) return 'BC';
+    return personalInfo.full_name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const selectedProfessionalEntries = professionalInfo.filter(
+    entry => selectedFields.professionalIds.includes(entry.id)
+  );
+
+  const shouldShowLinkedIn = (entryId: string) => {
+    return selectedFields.linkedin_urls.includes(entryId);
+  };
+
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="container mx-auto px-4 py-8 max-w-7xl">
         <Button
           variant="ghost"
           onClick={() => navigate('/my-cards')}
@@ -156,7 +176,8 @@ export default function CardCreator() {
           {id ? 'Edit Card' : 'Create New Card'}
         </h1>
 
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <div className="space-y-6">
           <UICard>
             <CardHeader>
               <CardTitle>Card Details</CardTitle>
@@ -306,6 +327,131 @@ export default function CardCreator() {
             <Button variant="outline" size="lg" onClick={() => navigate('/my-cards')}>
               Cancel
             </Button>
+          </div>
+          </div>
+
+          {/* Preview Section */}
+          <div className="lg:sticky lg:top-8 h-fit">
+            <UICard>
+              <CardHeader>
+                <CardTitle>Live Preview</CardTitle>
+                <CardDescription>See how your card will look</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="bg-gradient-to-br from-background via-background to-muted p-4 rounded-lg">
+                  <Card className="w-full max-w-md mx-auto shadow-lg">
+                    {/* Header with Avatar and Name */}
+                    <div className="bg-gradient-to-r from-primary to-primary/80 p-6 text-center">
+                      <Avatar className="w-24 h-24 mx-auto mb-3 border-4 border-background">
+                        {selectedFields.profile_photo_url && personalInfo?.profile_photo_url ? (
+                          <img 
+                            src={personalInfo.profile_photo_url} 
+                            alt={personalInfo.full_name || 'Profile'} 
+                            className="object-cover"
+                          />
+                        ) : (
+                          <AvatarFallback className="text-2xl bg-background text-primary">
+                            {getInitials()}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+
+                      {selectedFields.full_name && personalInfo?.full_name && (
+                        <h2 className="text-2xl font-bold text-primary-foreground mb-2">
+                          {personalInfo.full_name}
+                        </h2>
+                      )}
+
+                      {selectedProfessionalEntries.map((entry) => (
+                        <div key={entry.id}>
+                          {entry.designation && (
+                            <p className="text-lg text-primary-foreground/90 font-medium">{entry.designation}</p>
+                          )}
+                          {entry.company_name && (
+                            <p className="text-base text-primary-foreground/80">{entry.company_name}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Body with Contact Details */}
+                    <div className="p-6">
+                      {/* Bio */}
+                      {selectedFields.bio && personalInfo?.bio && (
+                        <div className="mb-4 pb-4 border-b border-border">
+                          <p className="text-sm text-muted-foreground text-center italic">
+                            {personalInfo.bio}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Contact Information */}
+                      <div className="space-y-3">
+                        {selectedFields.primary_email && personalInfo?.primary_email && (
+                          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <Mail className="w-4 h-4 text-primary" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Email</p>
+                              <p className="text-sm text-foreground break-all">
+                                {personalInfo.primary_email}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {selectedFields.mobile_number && personalInfo?.mobile_number && (
+                          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <Phone className="w-4 h-4 text-primary" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Phone</p>
+                              <p className="text-sm text-foreground">
+                                {personalInfo.mobile_number}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+
+                        {selectedProfessionalEntries.map((entry) => (
+                          <div key={entry.id}>
+                            {entry.company_website && (
+                              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                  <Globe className="w-4 h-4 text-primary" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Website</p>
+                                  <p className="text-sm text-foreground break-all">
+                                    {entry.company_website}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+
+                            {entry.linkedin_url && shouldShowLinkedIn(entry.id) && (
+                              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 mt-2">
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                  <Linkedin className="w-4 h-4 text-primary" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">LinkedIn</p>
+                                  <p className="text-sm text-foreground break-all">
+                                    {entry.linkedin_url}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              </CardContent>
+            </UICard>
           </div>
         </div>
       </div>

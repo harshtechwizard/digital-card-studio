@@ -45,6 +45,15 @@ export default function Profile() {
   }, [personalInfo]);
 
   const handleSavePersonal = async () => {
+    if (!personalForm.full_name || personalForm.full_name.trim() === '') {
+      toast({
+        title: "Validation Error",
+        description: "Full name is required.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       await savePersonalInfo(personalForm);
       toast({
@@ -52,9 +61,10 @@ export default function Profile() {
         description: "Your personal information has been updated successfully.",
       });
     } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save profile';
       toast({
         title: "Error",
-        description: "Failed to save profile",
+        description: errorMessage,
         variant: "destructive",
       });
     }

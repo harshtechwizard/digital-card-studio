@@ -56,22 +56,100 @@ export function useProfile() {
   };
 
   const savePersonalInfo = async (data: Omit<Partial<PersonalInfo>, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-    if (!user) return;
+    if (!user) {
+      throw new Error('User not authenticated');
+    }
 
     try {
-      const { error } = await supabase
-        .from('personal_info')
-        .upsert({
-          user_id: user.id,
-          full_name: data.full_name || '',
-          ...data,
-          updated_at: new Date().toISOString(),
-        } as any);
+      // Validate required fields
+      if (!data.full_name || data.full_name.trim() === '') {
+        throw new Error('Full name is required');
+      }
 
-      if (error) throw error;
+      // Get existing record to preserve fields not in the form
+      const { data: existingData, error: fetchError } = await supabase
+        .from('personal_info')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        throw fetchError;
+      }
+
+      const existing = existingData as PersonalInfo | null;
+
+      // Prepare home_address - JSONB field
+      let homeAddress: any = null;
+      if (data.home_address !== undefined) {
+        if (typeof data.home_address === 'string' && data.home_address.trim() !== '') {
+          homeAddress = data.home_address.trim();
+        } else if (typeof data.home_address === 'object' && data.home_address !== null) {
+          homeAddress = data.home_address;
+        }
+      } else if (existing?.home_address) {
+        homeAddress = existing.home_address;
+      }
+
+      // Build the payload, merging with existing data
+      const payload: any = {
+        user_id: user.id,
+        full_name: data.full_name.trim(),
+        primary_email: data.primary_email !== undefined ? (data.primary_email?.trim() || null) : (existing?.primary_email || null),
+        mobile_number: data.mobile_number !== undefined ? (data.mobile_number?.trim() || null) : (existing?.mobile_number || null),
+        bio: data.bio !== undefined ? (data.bio?.trim() || null) : (existing?.bio || null),
+        home_address: homeAddress,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Preserve other fields from existing record
+      if (existing) {
+        if (data.date_of_birth === undefined) payload.date_of_birth = existing.date_of_birth;
+        if (data.secondary_email === undefined) payload.secondary_email = existing.secondary_email;
+        if (data.phone_number === undefined) payload.phone_number = existing.phone_number;
+        if (data.profile_photo_url === undefined) payload.profile_photo_url = existing.profile_photo_url;
+      }
+
+      // Use update if exists, insert if not (to avoid unique constraint violation)
+      let error;
+      if (existing) {
+        // Update existing record - don't include user_id in update payload
+        const updatePayload: Database['public']['Tables']['personal_info']['Update'] = {
+          full_name: payload.full_name,
+          primary_email: payload.primary_email,
+          mobile_number: payload.mobile_number,
+          bio: payload.bio,
+          home_address: payload.home_address,
+          updated_at: payload.updated_at,
+          date_of_birth: payload.date_of_birth,
+          secondary_email: payload.secondary_email,
+          phone_number: payload.phone_number,
+          profile_photo_url: payload.profile_photo_url,
+        };
+        const { error: updateError } = await (supabase
+          .from('personal_info') as any)
+          .update(updatePayload)
+          .eq('user_id', user.id);
+        error = updateError;
+      } else {
+        // Insert new record
+        const insertPayload: Database['public']['Tables']['personal_info']['Insert'] = payload;
+        const { error: insertError } = await (supabase
+          .from('personal_info') as any)
+          .insert(insertPayload);
+        error = insertError;
+      }
+
+      if (error) {
+        console.error('Supabase error:', error);
+        throw new Error(error.message || 'Failed to save personal information');
+      }
+      
       await fetchProfile();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save personal info');
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save personal info';
+      console.error('Save personal info error:', err);
+      setError(errorMessage);
       throw err;
     }
   };
