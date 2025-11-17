@@ -35,32 +35,35 @@ export function usePublicCard(slug: string) {
 
       if (cardError) throw cardError;
       if (!card) throw new Error('Card not found');
+      
+      const typedCard = card as BusinessCard;
 
       // Track analytics
-      await supabase.from('card_analytics').insert({
-        card_id: card.id,
-        ip_address: null, // You can add IP detection if needed
+      const analyticsData = {
+        card_id: typedCard.id,
+        ip_address: null as string | null,
         user_agent: navigator.userAgent,
-        referrer: document.referrer || null,
-      });
+        referrer: (document.referrer || null) as string | null,
+      } as any;
+      await supabase.from('card_analytics').insert(analyticsData);
 
       // Fetch personal info
       const { data: personalInfo } = await supabase
         .from('personal_info')
         .select('*')
-        .eq('user_id', card.user_id)
+        .eq('user_id', typedCard.user_id)
         .single();
 
       // Fetch professional info
       const { data: professionalInfo } = await supabase
         .from('professional_info')
         .select('*')
-        .eq('user_id', card.user_id);
+        .eq('user_id', typedCard.user_id);
 
       setData({
-        card,
-        personalInfo: personalInfo || null,
-        professionalInfo: professionalInfo || [],
+        card: typedCard,
+        personalInfo: (personalInfo as PersonalInfo) || null,
+        professionalInfo: (professionalInfo as ProfessionalInfo[]) || [],
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch card');
