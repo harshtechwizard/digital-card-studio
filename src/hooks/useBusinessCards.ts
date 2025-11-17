@@ -33,7 +33,7 @@ export function useBusinessCards() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setCards(data || []);
+      setCards((data as BusinessCard[]) || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch cards');
     } finally {
@@ -45,18 +45,20 @@ export function useBusinessCards() {
     if (!user) throw new Error('User not authenticated');
 
     try {
+      const cardData = {
+        ...card,
+        user_id: user.id,
+      } as any;
+      
       const { data, error } = await supabase
         .from('business_cards')
-        .insert({
-          ...card,
-          user_id: user.id,
-        })
+        .insert(cardData)
         .select()
         .single();
 
       if (error) throw error;
       await fetchCards();
-      return data;
+      return data as BusinessCard;
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add card');
       throw err;
@@ -65,12 +67,13 @@ export function useBusinessCards() {
 
   const updateCard = async (id: string, updates: BusinessCardUpdate) => {
     try {
-      const { error } = await supabase
-        .from('business_cards')
-        .update({
-          ...updates,
-          updated_at: new Date().toISOString(),
-        })
+      const updateData = {
+        ...updates,
+        updated_at: new Date().toISOString(),
+      };
+      
+      const { error } = await (supabase.from as any)('business_cards')
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;
