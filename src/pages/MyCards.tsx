@@ -107,19 +107,32 @@ export default function MyCards() {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {cards.map((card) => (
-              <UICard key={card.id} className="relative">
+              <UICard 
+                key={card.id} 
+                className="relative hover:shadow-xl transition-all cursor-pointer"
+                onClick={() => window.open(`/card/${card.slug}`, '_blank')}
+              >
                 <CardContent className="pt-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <div>
-                      <h3 className="text-lg font-semibold text-foreground">{card.name}</h3>
-                      <p className="text-sm text-muted-foreground">/{card.slug}</p>
+                  {/* Card Preview */}
+                  <div className="mb-4 p-4 bg-gradient-to-br from-muted/30 to-muted/10 rounded-lg">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-bold text-foreground mb-1">{card.name}</h3>
+                        <p className="text-xs text-muted-foreground">/{card.slug}</p>
+                      </div>
+                      {card.is_default && (
+                        <Badge variant="secondary" className="ml-2">Default</Badge>
+                      )}
                     </div>
-                    {card.is_default && (
-                      <Badge variant="secondary">Default</Badge>
-                    )}
+                    
+                    {/* Mini card preview */}
+                    <div className="text-sm space-y-1 text-muted-foreground">
+                      <p className="text-xs opacity-70">Click to view full card</p>
+                    </div>
                   </div>
 
-                  <div className="flex gap-2">
+                  {/* Action Buttons */}
+                  <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button variant="outline" size="sm" className="flex-1">
@@ -131,7 +144,7 @@ export default function MyCards() {
                         <DialogHeader>
                           <DialogTitle>Share Your Card</DialogTitle>
                           <DialogDescription>
-                            Share your digital business card with anyone
+                            Share your digital business card
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
@@ -155,11 +168,10 @@ export default function MyCards() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1"
                       onClick={() => navigate(`/cards/edit/${card.id}`)}
                     >
                       <Settings className="w-4 h-4 mr-2" />
-                      Manage
+                      Edit
                     </Button>
 
                     <AlertDialog>
