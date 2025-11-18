@@ -19,6 +19,7 @@ export interface Database {
           secondary_email: string | null
           mobile_number: string | null
           phone_number: string | null
+          whatsapp_number: string | null
           home_address: Json | null
           bio: string | null
           instagram_url: string | null
@@ -37,6 +38,7 @@ export interface Database {
           secondary_email?: string | null
           mobile_number?: string | null
           phone_number?: string | null
+          whatsapp_number?: string | null
           home_address?: Json | null
           bio?: string | null
           instagram_url?: string | null
@@ -55,6 +57,7 @@ export interface Database {
           secondary_email?: string | null
           mobile_number?: string | null
           phone_number?: string | null
+          whatsapp_number?: string | null
           home_address?: Json | null
           bio?: string | null
           instagram_url?: string | null
@@ -72,10 +75,15 @@ export interface Database {
           designation: string | null
           company_name: string | null
           company_website: string | null
+          company_logo_url: string | null
           office_address: Json | null
           office_email: string | null
           office_phone: string | null
+          whatsapp_number: string | null
           department: string | null
+          office_opening_time: string | null
+          office_closing_time: string | null
+          office_days: string | null
           instagram_url: string | null
           facebook_url: string | null
           linkedin_url: string | null
@@ -89,10 +97,15 @@ export interface Database {
           designation?: string | null
           company_name?: string | null
           company_website?: string | null
+          company_logo_url?: string | null
           office_address?: Json | null
           office_email?: string | null
           office_phone?: string | null
+          whatsapp_number?: string | null
           department?: string | null
+          office_opening_time?: string | null
+          office_closing_time?: string | null
+          office_days?: string | null
           instagram_url?: string | null
           facebook_url?: string | null
           linkedin_url?: string | null
@@ -106,10 +119,15 @@ export interface Database {
           designation?: string | null
           company_name?: string | null
           company_website?: string | null
+          company_logo_url?: string | null
           office_address?: Json | null
           office_email?: string | null
           office_phone?: string | null
+          whatsapp_number?: string | null
           department?: string | null
+          office_opening_time?: string | null
+          office_closing_time?: string | null
+          office_days?: string | null
           instagram_url?: string | null
           facebook_url?: string | null
           linkedin_url?: string | null
