@@ -37,21 +37,22 @@ export function BusinessCardPreview({ personalInfo, professionalInfo, fieldsConf
       {/* Company Logo Background */}
       {selectedProfessional?.company_logo_url && (
         <div 
-          className="absolute inset-0 opacity-5 bg-center bg-no-repeat bg-contain animate-pulse"
+          className="absolute inset-0 opacity-10 bg-center bg-no-repeat bg-cover"
           style={{ 
             backgroundImage: `url(${selectedProfessional.company_logo_url})`,
-            animationDuration: '3s'
+            backgroundSize: 'cover',
+            filter: 'blur(8px)',
           }}
         />
       )}
 
       {/* Content */}
       <div className="relative z-10 p-8">
-        {/* Profile Photo */}
+        {/* Profile Photo - Centered */}
         <div className="flex justify-center mb-6 animate-fade-in">
-          <Avatar className="w-32 h-32 border-4 border-white shadow-xl ring-4 ring-primary/20">
-            {personalInfo?.profile_photo_url ? (
-              <AvatarImage src={personalInfo.profile_photo_url} alt={personalInfo.full_name} />
+          <Avatar className="w-32 h-32 border-4 border-white shadow-xl ring-4 ring-primary/20 bg-white dark:bg-gray-800">
+            {fieldsConfig?.profile_photo_url && personalInfo?.profile_photo_url ? (
+              <AvatarImage src={personalInfo.profile_photo_url} alt={personalInfo.full_name || 'Profile'} className="object-cover" />
             ) : null}
             <AvatarFallback className="text-3xl bg-gradient-to-br from-primary to-primary/70 text-white">
               {getInitials()}

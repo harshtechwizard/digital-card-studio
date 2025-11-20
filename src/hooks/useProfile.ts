@@ -167,13 +167,30 @@ export function useProfile() {
     if (!user) return;
 
     try {
+      // Prepare the data, ensuring all fields are properly formatted
+      const payload: any = {
+        user_id: user.id,
+        designation: data.designation?.trim() || null,
+        company_name: data.company_name?.trim() || null,
+        company_website: data.company_website?.trim() || null,
+        company_logo_url: data.company_logo_url?.trim() || null,
+        office_email: data.office_email?.trim() || null,
+        office_phone: data.office_phone?.trim() || null,
+        whatsapp_number: data.whatsapp_number?.trim() || null,
+        office_opening_time: data.office_opening_time?.trim() || null,
+        office_closing_time: data.office_closing_time?.trim() || null,
+        office_days: data.office_days?.trim() || null,
+        department: data.department?.trim() || null,
+        instagram_url: data.instagram_url?.trim() || null,
+        facebook_url: data.facebook_url?.trim() || null,
+        linkedin_url: data.linkedin_url?.trim() || null,
+        is_primary: data.is_primary ?? false,
+        updated_at: new Date().toISOString(),
+      };
+
       const { error } = await supabase
         .from('professional_info')
-        .upsert({
-          user_id: user.id,
-          ...data,
-          updated_at: new Date().toISOString(),
-        } as any);
+        .upsert(payload as any);
 
       if (error) throw error;
       await fetchProfile();

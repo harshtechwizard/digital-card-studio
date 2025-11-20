@@ -43,10 +43,16 @@ export default function Profile() {
     company_website: '',
     office_email: '',
     office_phone: '',
+    whatsapp_number: '',
+    company_logo_url: '',
+    office_opening_time: '',
+    office_closing_time: '',
+    office_days: '',
     linkedin_url: '',
     instagram_url: '',
     facebook_url: '',
   });
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   useEffect(() => {
     if (personalInfo) {
@@ -139,6 +145,80 @@ export default function Profile() {
     }));
   };
 
+  const handleLogoUpload = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to upload a company logo.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please upload an image smaller than 2 MB.",
+        variant: "destructive",
+      });
+      event.target.value = '';
+      return;
+    }
+
+    try {
+      setUploadingLogo(true);
+      const fileExt = file.name.split('.').pop();
+      const fileName = `logo-${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('company-logos')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true,
+          contentType: file.type,
+        });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      const { data } = supabase.storage
+        .from('company-logos')
+        .getPublicUrl(filePath);
+
+      setProfessionalForm(prev => ({
+        ...prev,
+        company_logo_url: data.publicUrl,
+      }));
+
+      toast({
+        title: "Logo uploaded",
+        description: "Your company logo has been updated.",
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to upload logo';
+      toast({
+        title: "Upload error",
+        description: message,
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingLogo(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleRemoveLogo = () => {
+    setProfessionalForm(prev => ({
+      ...prev,
+      company_logo_url: '',
+    }));
+  };
+
   const handleSavePersonal = async () => {
     if (!personalForm.full_name || personalForm.full_name.trim() === '') {
       toast({
@@ -183,6 +263,11 @@ export default function Profile() {
         company_website: '',
         office_email: '',
         office_phone: '',
+        whatsapp_number: '',
+        company_logo_url: '',
+        office_opening_time: '',
+        office_closing_time: '',
+        office_days: '',
         linkedin_url: '',
         instagram_url: '',
         facebook_url: '',
@@ -207,10 +292,15 @@ export default function Profile() {
       company_name: entry.company_name || '',
       company_website: entry.company_website || '',
       office_email: entry.office_email || '',
-        office_phone: entry.office_phone || '',
-        linkedin_url: entry.linkedin_url || '',
-        instagram_url: entry.instagram_url || '',
-        facebook_url: entry.facebook_url || '',
+      office_phone: entry.office_phone || '',
+      whatsapp_number: entry.whatsapp_number || '',
+      company_logo_url: entry.company_logo_url || '',
+      office_opening_time: entry.office_opening_time || '',
+      office_closing_time: entry.office_closing_time || '',
+      office_days: entry.office_days || '',
+      linkedin_url: entry.linkedin_url || '',
+      instagram_url: entry.instagram_url || '',
+      facebook_url: entry.facebook_url || '',
     });
   };
 
@@ -229,6 +319,11 @@ export default function Profile() {
         company_website: '',
         office_email: '',
         office_phone: '',
+        whatsapp_number: '',
+        company_logo_url: '',
+        office_opening_time: '',
+        office_closing_time: '',
+        office_days: '',
         linkedin_url: '',
         instagram_url: '',
         facebook_url: '',
@@ -484,6 +579,93 @@ export default function Profile() {
                   onChange={(e) => setProfessionalForm(prev => ({ ...prev, office_phone: e.target.value }))}
                   placeholder="+1 (555) 111-2222"
                 />
+              </div>
+
+              <div>
+                <Label htmlFor="whatsappNumber">WhatsApp Number</Label>
+                <Input
+                  id="whatsappNumber"
+                  type="tel"
+                  value={professionalForm.whatsapp_number}
+                  onChange={(e) => setProfessionalForm(prev => ({ ...prev, whatsapp_number: e.target.value }))}
+                  placeholder="+1 (555) 123-4567"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Include country code (e.g., +1234567890)
+                </p>
+              </div>
+
+              <div>
+                <Label>Company Logo</Label>
+                <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:items-center">
+                  {professionalForm.company_logo_url ? (
+                    <div className="relative">
+                      <img 
+                        src={professionalForm.company_logo_url} 
+                        alt="Company logo" 
+                        className="w-20 h-20 object-contain border border-border rounded"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleRemoveLogo}
+                        disabled={uploadingLogo}
+                        className="absolute -top-2 -right-2 h-6 w-6 p-0"
+                      >
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 border-2 border-dashed border-border rounded flex items-center justify-center">
+                      <span className="text-xs text-muted-foreground">No logo</span>
+                    </div>
+                  )}
+                  <div className="space-y-2 w-full">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleLogoUpload}
+                      disabled={uploadingLogo}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      JPG, PNG, or WEBP. Max 2 MB.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <Label>Office Hours</Label>
+                <div className="grid gap-4 md:grid-cols-2 mt-2">
+                  <div>
+                    <Label htmlFor="openingTime" className="text-sm text-muted-foreground">Opening Time</Label>
+                    <Input
+                      id="openingTime"
+                      type="time"
+                      value={professionalForm.office_opening_time}
+                      onChange={(e) => setProfessionalForm(prev => ({ ...prev, office_opening_time: e.target.value }))}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="closingTime" className="text-sm text-muted-foreground">Closing Time</Label>
+                    <Input
+                      id="closingTime"
+                      type="time"
+                      value={professionalForm.office_closing_time}
+                      onChange={(e) => setProfessionalForm(prev => ({ ...prev, office_closing_time: e.target.value }))}
+                    />
+                  </div>
+                </div>
+                <div className="mt-2">
+                  <Label htmlFor="officeDays" className="text-sm text-muted-foreground">Working Days</Label>
+                  <Input
+                    id="officeDays"
+                    value={professionalForm.office_days}
+                    onChange={(e) => setProfessionalForm(prev => ({ ...prev, office_days: e.target.value }))}
+                    placeholder="e.g., Monday-Friday or Mon-Sat"
+                  />
+                </div>
               </div>
 
               <div>

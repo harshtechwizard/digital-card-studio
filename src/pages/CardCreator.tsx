@@ -8,9 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card as UICard, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Card } from '@/components/ui/card';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Mail, Phone, PhoneCall, Globe, Linkedin, Instagram, Facebook, ArrowLeft, Loader2 } from 'lucide-react';
+import { BusinessCardPreview } from '@/components/BusinessCardPreview';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 type ProfessionalFieldKey = 'linkedin_urls' | 'professional_emails' | 'professional_phones' | 'professional_instagrams' | 'professional_facebooks';
@@ -199,16 +198,6 @@ export default function CardCreator() {
       </div>
     );
   }
-
-  const getInitials = () => {
-    if (!personalInfo?.full_name) return 'BC';
-    return personalInfo.full_name
-      .split(' ')
-      .map(n => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   const selectedProfessionalEntries = professionalInfo.filter(
     entry => selectedFields.professionalIds.includes(entry.id)
@@ -514,223 +503,11 @@ export default function CardCreator() {
               </CardHeader>
               <CardContent>
                 <div className="bg-gradient-to-br from-background via-background to-muted p-4 rounded-lg">
-                  <Card className="w-full max-w-md mx-auto shadow-lg">
-                    {/* Header with Avatar and Name */}
-                    <div className="bg-gradient-to-r from-primary to-primary/80 p-6 text-center">
-                      <Avatar className="w-24 h-24 mx-auto mb-3 border-4 border-background">
-                        {selectedFields.profile_photo_url && personalInfo?.profile_photo_url ? (
-                          <img 
-                            src={personalInfo.profile_photo_url} 
-                            alt={personalInfo.full_name || 'Profile'} 
-                            className="object-cover"
-                          />
-                        ) : (
-                          <AvatarFallback className="text-2xl bg-background text-primary">
-                            {getInitials()}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
-
-                      {selectedFields.full_name && personalInfo?.full_name && (
-                        <h2 className="text-2xl font-bold text-primary-foreground mb-2">
-                          {personalInfo.full_name}
-                        </h2>
-                      )}
-
-                      {selectedProfessionalEntries.map((entry) => (
-                        <div key={entry.id}>
-                          {entry.designation && (
-                            <p className="text-lg text-primary-foreground/90 font-medium">{entry.designation}</p>
-                          )}
-                          {entry.company_name && (
-                            <p className="text-base text-primary-foreground/80">{entry.company_name}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Body with Contact Details */}
-                    <div className="p-6">
-                      {/* Bio */}
-                      {selectedFields.bio && personalInfo?.bio && (
-                        <div className="mb-4 pb-4 border-b border-border">
-                          <p className="text-sm text-muted-foreground text-center italic">
-                            {personalInfo.bio}
-                          </p>
-                        </div>
-                      )}
-
-                      {/* Contact Information */}
-                      <div className="space-y-3">
-                        {selectedFields.primary_email && personalInfo?.primary_email && (
-                          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <Mail className="w-4 h-4 text-primary" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Email</p>
-                              <p className="text-sm text-foreground break-all">
-                                {personalInfo.primary_email}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-
-                        {selectedFields.mobile_number && personalInfo?.mobile_number && (
-                          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <Phone className="w-4 h-4 text-primary" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Phone</p>
-                              <p className="text-sm text-foreground">
-                                {personalInfo.mobile_number}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-
-                        {selectedFields.alternate_mobile && personalInfo?.phone_number && (
-                          <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                              <PhoneCall className="w-4 h-4 text-primary" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Alternate Phone</p>
-                              <p className="text-sm text-foreground">
-                                {personalInfo.phone_number}
-                              </p>
-                            </div>
-                          </div>
-                        )}
-
-                        {(selectedFields.social_instagram && personalInfo?.instagram_url) ||
-                          (selectedFields.social_facebook && personalInfo?.facebook_url) ||
-                          (selectedFields.social_linkedin && personalInfo?.linkedin_url) ? (
-                          <div className="grid gap-2">
-                            {selectedFields.social_instagram && personalInfo?.instagram_url && (
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                  <Instagram className="w-4 h-4 text-primary" />
-                                </div>
-                                <a href={personalInfo.instagram_url} target="_blank" rel="noopener noreferrer" className="text-sm text-foreground hover:text-primary transition-colors break-all">
-                                  {personalInfo.instagram_url}
-                                </a>
-                              </div>
-                            )}
-                            {selectedFields.social_facebook && personalInfo?.facebook_url && (
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                  <Facebook className="w-4 h-4 text-primary" />
-                                </div>
-                                <a href={personalInfo.facebook_url} target="_blank" rel="noopener noreferrer" className="text-sm text-foreground hover:text-primary transition-colors break-all">
-                                  {personalInfo.facebook_url}
-                                </a>
-                              </div>
-                            )}
-                            {selectedFields.social_linkedin && personalInfo?.linkedin_url && (
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                  <Linkedin className="w-4 h-4 text-primary" />
-                                </div>
-                                <a href={personalInfo.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-sm text-foreground hover:text-primary transition-colors break-all">
-                                  {personalInfo.linkedin_url}
-                                </a>
-                              </div>
-                            )}
-                          </div>
-                        ) : null}
-
-                        {selectedProfessionalEntries.map((entry) => (
-                          <div key={entry.id}>
-                            {entry.company_website && (
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                  <Globe className="w-4 h-4 text-primary" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Website</p>
-                                  <p className="text-sm text-foreground break-all">
-                                    {entry.company_website}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-
-                            {entry.office_email && shouldShowProfessionalField(entry.id, 'professional_emails') && (
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 mt-2">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                  <Mail className="w-4 h-4 text-primary" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Work Email</p>
-                                  <p className="text-sm text-foreground break-all">
-                                    {entry.office_email}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-
-                            {entry.office_phone && shouldShowProfessionalField(entry.id, 'professional_phones') && (
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 mt-2">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                  <Phone className="w-4 h-4 text-primary" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Work Phone</p>
-                                  <p className="text-sm text-foreground break-all">
-                                    {entry.office_phone}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-
-                            {entry.linkedin_url && shouldShowProfessionalField(entry.id, 'linkedin_urls') && (
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 mt-2">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                  <Linkedin className="w-4 h-4 text-primary" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">LinkedIn</p>
-                                  <p className="text-sm text-foreground break-all">
-                                    {entry.linkedin_url}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-
-                            {entry.instagram_url && shouldShowProfessionalField(entry.id, 'professional_instagrams') && (
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 mt-2">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                  <Instagram className="w-4 h-4 text-primary" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Instagram</p>
-                                  <p className="text-sm text-foreground break-all">
-                                    {entry.instagram_url}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-
-                            {entry.facebook_url && shouldShowProfessionalField(entry.id, 'professional_facebooks') && (
-                              <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 mt-2">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                  <Facebook className="w-4 h-4 text-primary" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-0.5">Facebook</p>
-                                  <p className="text-sm text-foreground break-all">
-                                    {entry.facebook_url}
-                                  </p>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </Card>
+                  <BusinessCardPreview
+                    personalInfo={personalInfo}
+                    professionalInfo={selectedProfessionalEntries}
+                    fieldsConfig={selectedFields}
+                  />
                 </div>
               </CardContent>
             </UICard>
