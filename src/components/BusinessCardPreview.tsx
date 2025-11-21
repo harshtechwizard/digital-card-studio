@@ -33,24 +33,22 @@ export function BusinessCardPreview({ personalInfo, professionalInfo, fieldsConf
   };
 
   return (
-    <div className="relative w-full max-w-md mx-auto overflow-hidden rounded-2xl shadow-2xl bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      {/* Company Logo Background */}
-      {selectedProfessional?.company_logo_url && (
-        <div 
-          className="absolute inset-0 opacity-10 bg-center bg-no-repeat bg-cover"
-          style={{ 
-            backgroundImage: `url(${selectedProfessional.company_logo_url})`,
-            backgroundSize: 'cover',
-            filter: 'blur(8px)',
-          }}
-        />
-      )}
-
-      {/* Content */}
+    <div className="relative w-full max-w-md mx-auto overflow-hidden rounded-3xl shadow-2xl bg-gradient-to-br from-white via-gray-50 to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="relative z-10 p-8">
-        {/* Profile Photo - Centered */}
+        {/* Company Logo - Top */}
+        {selectedProfessional?.company_logo_url && (
+          <div className="flex justify-center mb-4 animate-fade-in">
+            <img
+              src={selectedProfessional.company_logo_url}
+              alt={selectedProfessional.company_name || 'Company logo'}
+              className="h-12 object-contain"
+            />
+          </div>
+        )}
+
+        {/* Profile Photo - Big & Centered */}
         <div className="flex justify-center mb-6 animate-fade-in">
-          <Avatar className="w-32 h-32 border-4 border-white shadow-xl ring-4 ring-primary/20 bg-white dark:bg-gray-800">
+          <Avatar className="w-40 h-40 border-4 border-white shadow-xl ring-4 ring-primary/20 bg-white dark:bg-gray-800">
             {fieldsConfig?.profile_photo_url && personalInfo?.profile_photo_url ? (
               <AvatarImage src={personalInfo.profile_photo_url} alt={personalInfo.full_name || 'Profile'} className="object-cover" />
             ) : null}
@@ -192,10 +190,6 @@ export function BusinessCardPreview({ personalInfo, professionalInfo, fieldsConf
           </div>
         )}
       </div>
-
-      {/* Decorative Elements */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -mr-16 -mt-16 animate-pulse" style={{ animationDuration: '4s' }} />
-      <div className="absolute bottom-0 left-0 w-24 h-24 bg-primary/5 rounded-full -ml-12 -mb-12 animate-pulse" style={{ animationDuration: '5s' }} />
     </div>
   );
 }
