@@ -143,7 +143,7 @@ export default function PublicCard() {
         <div className="transition duration-700 ease-out opacity-100 translate-y-0">
           <BusinessCardPreview
             personalInfo={personalInfo}
-            professionalInfo={selectedProfessionalEntries}
+            professionalInfo={selectedProfessionalEntries.length > 0 ? selectedProfessionalEntries : professionalInfo}
             fieldsConfig={fieldsConfig}
           />
         </div>
