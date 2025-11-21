@@ -53,14 +53,14 @@ export default function PublicCard() {
     [selectedProfessionalEntries, professionalInfo]
   );
 
-  const [showCard, setShowCard] = useState(false);
+  const [logoOverlayVisible, setLogoOverlayVisible] = useState(false);
   useEffect(() => {
     if (!featuredProfessional?.company_logo_url) {
-      setShowCard(true);
+      setLogoOverlayVisible(false);
       return;
     }
-    setShowCard(false);
-    const timer = setTimeout(() => setShowCard(true), 1000);
+    setLogoOverlayVisible(true);
+    const timer = setTimeout(() => setLogoOverlayVisible(false), 1000);
     return () => clearTimeout(timer);
   }, [featuredProfessional?.company_logo_url, slug]);
 
@@ -123,26 +123,22 @@ export default function PublicCard() {
     });
   };
 
-  if (!showCard) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted flex items-center justify-center p-8">
-        {featuredProfessional?.company_logo_url ? (
+  return (
+    <div className="relative min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-4 overflow-hidden">
+      {featuredProfessional?.company_logo_url && (
+        <div
+          className={`fixed inset-0 z-30 flex items-center justify-center bg-gradient-to-b from-background via-background/90 to-muted transition-opacity duration-700 ${
+            logoOverlayVisible ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+          }`}
+        >
           <img
             src={featuredProfessional.company_logo_url}
             alt={featuredProfessional.company_name || 'Company logo'}
-            className="max-w-xs sm:max-w-sm w-full object-contain drop-shadow-2xl animate-fade-in"
+            className="max-w-xs sm:max-w-sm w-full object-contain drop-shadow-2xl"
           />
-        ) : (
-          <div className="text-center text-muted-foreground animate-fade-in">
-            <p className="text-lg font-semibold">Preparing your card…</p>
-          </div>
-        )}
-      </div>
-    );
-  }
+        </div>
+      )}
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl mx-auto space-y-8">
         <div className="transition duration-700 ease-out opacity-100 translate-y-0">
           <BusinessCardPreview
