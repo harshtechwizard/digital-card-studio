@@ -44,8 +44,9 @@ export default function PublicCard() {
   const fieldsConfig = (card.fields_config as any) || {};
   type ProfessionalFieldKey = 'linkedin_urls' | 'professional_emails' | 'professional_phones' | 'professional_instagrams' | 'professional_facebooks';
 
-  const selectedProfessionalEntries = professionalInfo.filter(
-    entry => fieldsConfig.professionalIds?.includes(entry.id)
+  const selectedProfessionalEntries = useMemo(
+    () => professionalInfo.filter(entry => fieldsConfig.professionalIds?.includes(entry.id)),
+    [professionalInfo, fieldsConfig.professionalIds]
   );
 
   const featuredProfessional = useMemo(
