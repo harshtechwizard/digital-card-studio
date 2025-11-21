@@ -55,6 +55,10 @@ export default function PublicCard() {
 
   const [showCard, setShowCard] = useState(false);
   useEffect(() => {
+    if (!featuredProfessional?.company_logo_url) {
+      setShowCard(true);
+      return;
+    }
     setShowCard(false);
     const timer = setTimeout(() => setShowCard(true), 1000);
     return () => clearTimeout(timer);
