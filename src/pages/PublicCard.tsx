@@ -1,7 +1,7 @@
+import { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { usePublicCard } from '@/hooks/usePublicCard';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { BusinessCardPreview } from '@/components/BusinessCardPreview';
 import { Download, Share2, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -47,6 +47,18 @@ export default function PublicCard() {
   const selectedProfessionalEntries = professionalInfo.filter(
     entry => fieldsConfig.professionalIds?.includes(entry.id)
   );
+
+  const featuredProfessional = useMemo(
+    () => selectedProfessionalEntries[0] || professionalInfo[0] || null,
+    [selectedProfessionalEntries, professionalInfo]
+  );
+
+  const [showCard, setShowCard] = useState(false);
+  useEffect(() => {
+    setShowCard(false);
+    const timer = setTimeout(() => setShowCard(true), 1000);
+    return () => clearTimeout(timer);
+  }, [featuredProfessional?.company_logo_url, slug]);
 
   const shouldShowProfessionalField = (entryId: string, key: ProfessionalFieldKey) => {
     const list = fieldsConfig[key];
@@ -107,25 +119,43 @@ export default function PublicCard() {
     });
   };
 
+  if (!showCard) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted flex items-center justify-center p-8">
+        {featuredProfessional?.company_logo_url ? (
+          <img
+            src={featuredProfessional.company_logo_url}
+            alt={featuredProfessional.company_name || 'Company logo'}
+            className="max-w-xs sm:max-w-sm w-full object-contain drop-shadow-2xl animate-fade-in"
+          />
+        ) : (
+          <div className="text-center text-muted-foreground animate-fade-in">
+            <p className="text-lg font-semibold">Preparing your card…</p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-muted via-background to-muted/60 flex items-center justify-center p-4">
-      <div className="w-full max-w-3xl mx-auto space-y-6">
-        <Card className="rounded-3xl overflow-hidden shadow-[0_30px_80px_rgba(15,23,42,0.2)] border-none p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl mx-auto space-y-8">
+        <div className="transition duration-700 ease-out opacity-100 translate-y-0">
           <BusinessCardPreview
             personalInfo={personalInfo}
             professionalInfo={selectedProfessionalEntries}
             fieldsConfig={fieldsConfig}
           />
-        </Card>
+        </div>
 
-        <section className="flex flex-col sm:flex-row gap-3">
-          <Button onClick={generateVCF} className="w-full sm:flex-1 text-base py-6">
+        <section className="flex flex-col sm:flex-row gap-4">
+          <Button onClick={generateVCF} className="w-full sm:flex-1 text-base py-6 rounded-2xl shadow-lg">
             <Download className="w-4 h-4 mr-2" />
             Save Contact
           </Button>
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="outline" className="w-full sm:flex-1 text-base py-6">
+              <Button variant="outline" className="w-full sm:flex-1 text-base py-6 rounded-2xl">
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
               </Button>
