@@ -40,6 +40,10 @@ export default function PublicCard() {
     );
   }
 
+  return <PublicCardContent data={data} slug={slug!} />;
+}
+
+function PublicCardContent({ data, slug }: { data: any; slug: string }) {
   const { card, personalInfo, professionalInfo } = data;
   const fieldsConfig = (card.fields_config as any) || {};
   type ProfessionalFieldKey = 'linkedin_urls' | 'professional_emails' | 'professional_phones' | 'professional_instagrams' | 'professional_facebooks';
