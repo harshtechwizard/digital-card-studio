@@ -14,7 +14,7 @@ interface BusinessCardPreviewProps {
 export function BusinessCardPreview({ personalInfo, professionalInfo, fieldsConfig }: BusinessCardPreviewProps) {
   const selectedProfessional = professionalInfo.find(p => 
     fieldsConfig?.professionalIds?.includes(p.id)
-  );
+  ) || professionalInfo[0] || null;
 
   const getInitials = () => {
     if (!personalInfo?.full_name) return 'BC';
