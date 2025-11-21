@@ -22,19 +22,28 @@ export function useBusinessCards() {
   }, [user]);
 
   const fetchCards = async () => {
-    if (!user) return;
+    if (!user) {
+      console.log('useBusinessCards: No user found');
+      return;
+    }
 
     try {
       setLoading(true);
+      console.log('useBusinessCards: Fetching cards for user:', user.id);
       const { data, error } = await supabase
         .from('business_cards')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('useBusinessCards: Error fetching cards:', error);
+        throw error;
+      }
+      console.log('useBusinessCards: Fetched cards:', data);
       setCards((data as BusinessCard[]) || []);
     } catch (err) {
+      console.error('useBusinessCards: Exception:', err);
       setError(err instanceof Error ? err.message : 'Failed to fetch cards');
     } finally {
       setLoading(false);

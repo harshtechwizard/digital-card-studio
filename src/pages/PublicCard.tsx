@@ -40,12 +40,17 @@ export default function PublicCard() {
     );
   }
 
+  return <PublicCardContent data={data} slug={slug!} />;
+}
+
+function PublicCardContent({ data, slug }: { data: any; slug: string }) {
   const { card, personalInfo, professionalInfo } = data;
   const fieldsConfig = (card.fields_config as any) || {};
   type ProfessionalFieldKey = 'linkedin_urls' | 'professional_emails' | 'professional_phones' | 'professional_instagrams' | 'professional_facebooks';
 
-  const selectedProfessionalEntries = professionalInfo.filter(
-    entry => fieldsConfig.professionalIds?.includes(entry.id)
+  const selectedProfessionalEntries = useMemo(
+    () => professionalInfo.filter(entry => fieldsConfig.professionalIds?.includes(entry.id)),
+    [professionalInfo, fieldsConfig.professionalIds]
   );
 
   const featuredProfessional = useMemo(
@@ -143,7 +148,7 @@ export default function PublicCard() {
         <div className="transition duration-700 ease-out opacity-100 translate-y-0">
           <BusinessCardPreview
             personalInfo={personalInfo}
-            professionalInfo={selectedProfessionalEntries}
+            professionalInfo={selectedProfessionalEntries.length > 0 ? selectedProfessionalEntries : professionalInfo}
             fieldsConfig={fieldsConfig}
           />
         </div>

@@ -709,6 +709,15 @@ export default function Profile() {
                       company_name: '',
                       company_website: '',
                       office_email: '',
+                      office_phone: '',
+                      whatsapp_number: '',
+                      company_logo_url: '',
+                      office_opening_time: '',
+                      office_closing_time: '',
+                      office_days: '',
+                      linkedin_url: '',
+                      instagram_url: '',
+                      facebook_url: '',
                     });
                   }}
                   className="w-full"
