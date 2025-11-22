@@ -5,11 +5,19 @@ import { Database } from '@/types/database';
 type BusinessCard = Database['public']['Tables']['business_cards']['Row'];
 type PersonalInfo = Database['public']['Tables']['personal_info']['Row'];
 type ProfessionalInfo = Database['public']['Tables']['professional_info']['Row'];
+type Education = Database['public']['Tables']['education']['Row'];
+type Award = Database['public']['Tables']['awards']['Row'];
+type ProductService = Database['public']['Tables']['products_services']['Row'];
+type Photo = Database['public']['Tables']['photo_gallery']['Row'];
 
 interface PublicCardData {
   card: BusinessCard;
   personalInfo: PersonalInfo | null;
   professionalInfo: ProfessionalInfo[];
+  education: Education[];
+  awards: Award[];
+  productsServices: ProductService[];
+  photos: Photo[];
 }
 
 export function usePublicCard(slug: string) {
@@ -80,10 +88,57 @@ export function usePublicCard(slug: string) {
       }
       console.log('usePublicCard: Professional info:', professionalInfo);
 
+      // Fetch education
+      const { data: education, error: educationError } = await supabase
+        .from('education')
+        .select('*')
+        .eq('user_id', typedCard.user_id)
+        .order('year_completed', { ascending: false });
+
+      if (educationError) {
+        console.error('usePublicCard: Education error:', educationError);
+      }
+
+      // Fetch awards
+      const { data: awards, error: awardsError } = await supabase
+        .from('awards')
+        .select('*')
+        .eq('user_id', typedCard.user_id)
+        .order('date_received', { ascending: false });
+
+      if (awardsError) {
+        console.error('usePublicCard: Awards error:', awardsError);
+      }
+
+      // Fetch products/services
+      const { data: productsServices, error: productsError } = await supabase
+        .from('products_services')
+        .select('*')
+        .eq('user_id', typedCard.user_id);
+
+      if (productsError) {
+        console.error('usePublicCard: Products/Services error:', productsError);
+      }
+
+      // Fetch photos
+      const { data: photos, error: photosError } = await supabase
+        .from('photo_gallery')
+        .select('*')
+        .eq('user_id', typedCard.user_id)
+        .order('display_order', { ascending: true });
+
+      if (photosError) {
+        console.error('usePublicCard: Photos error:', photosError);
+      }
+
       setData({
         card: typedCard,
         personalInfo: (personalInfo as PersonalInfo) || null,
         professionalInfo: (professionalInfo as ProfessionalInfo[]) || [],
+        education: (education as Education[]) || [],
+        awards: (awards as Award[]) || [],
+        productsServices: (productsServices as ProductService[]) || [],
+        photos: (photos as Photo[]) || [],
       });
       console.log('usePublicCard: Data set successfully');
     } catch (err) {

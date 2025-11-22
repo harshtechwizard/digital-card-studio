@@ -94,8 +94,13 @@ const openWhatsApp = (number: string) => {
 };
 
 function PublicCardContent({ data, slug }: { data: any; slug: string }) {
-  const { card, personalInfo, professionalInfo } = data;
+  const { card, personalInfo, professionalInfo, education, awards, productsServices, photos } = data;
   const fieldsConfig = (card.fields_config as any) || {};
+
+  const selectedEducation = education?.filter((e: any) => fieldsConfig.educationIds?.includes(e.id)) || [];
+  const selectedAwards = awards?.filter((a: any) => fieldsConfig.awardIds?.includes(a.id)) || [];
+  const selectedProducts = productsServices?.filter((p: any) => fieldsConfig.productServiceIds?.includes(p.id)) || [];
+  const selectedPhotos = photos?.filter((p: any) => fieldsConfig.photoIds?.includes(p.id)) || [];
 
   const selectedProfessionalEntries = useMemo(
     () => professionalInfo.filter(entry => fieldsConfig.professionalIds?.includes(entry.id)),
@@ -529,6 +534,126 @@ function PublicCardContent({ data, slug }: { data: any; slug: string }) {
                     )}
                   </div>
                 </article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {selectedEducation.length > 0 && (
+          <section className="rounded-[40px] border border-white/70 dark:border-slate-800/70 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl shadow-[0_20px_60px_rgba(15,23,42,0.08)] p-8 space-y-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Academic Background</p>
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Education</h2>
+            </div>
+            <div className="space-y-4">
+              {selectedEducation.map((entry: any) => (
+                <article
+                  key={entry.id}
+                  className="rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 p-6"
+                >
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
+                    {entry.degree_name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{entry.institution}</p>
+                  {entry.year_completed && (
+                    <p className="text-sm text-muted-foreground">Completed: {entry.year_completed}</p>
+                  )}
+                  {entry.description && (
+                    <p className="text-sm text-muted-foreground mt-2">{entry.description}</p>
+                  )}
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {selectedAwards.length > 0 && (
+          <section className="rounded-[40px] border border-white/70 dark:border-slate-800/70 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl shadow-[0_20px_60px_rgba(15,23,42,0.08)] p-8 space-y-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Recognition</p>
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Awards & Certifications</h2>
+            </div>
+            <div className="space-y-4">
+              {selectedAwards.map((entry: any) => (
+                <article
+                  key={entry.id}
+                  className="rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 p-6"
+                >
+                  <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
+                    {entry.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">{entry.issuing_org}</p>
+                  {entry.date_received && (
+                    <p className="text-sm text-muted-foreground">Received: {new Date(entry.date_received).toLocaleDateString()}</p>
+                  )}
+                  {entry.expiry_date && (
+                    <p className="text-sm text-muted-foreground">Expires: {new Date(entry.expiry_date).toLocaleDateString()}</p>
+                  )}
+                  {entry.certificate_url && (
+                    <a href={entry.certificate_url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline">
+                      View Certificate
+                    </a>
+                  )}
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {selectedProducts.length > 0 && (
+          <section className="rounded-[40px] border border-white/70 dark:border-slate-800/70 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl shadow-[0_20px_60px_rgba(15,23,42,0.08)] p-8 space-y-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Offerings</p>
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Products & Services</h2>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2">
+              {selectedProducts.map((entry: any) => (
+                <article
+                  key={entry.id}
+                  className="rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 p-6 space-y-3"
+                >
+                  {entry.photo_url && (
+                    <img src={entry.photo_url} alt={entry.name} className="w-full h-40 object-cover rounded-2xl" />
+                  )}
+                  <div>
+                    <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
+                      {entry.name}
+                    </h3>
+                    {entry.category && (
+                      <p className="text-sm text-muted-foreground">{entry.category}</p>
+                    )}
+                    {entry.description && (
+                      <p className="text-sm text-muted-foreground mt-2">{entry.description}</p>
+                    )}
+                    {entry.website_link && (
+                      <a href={entry.website_link} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline inline-block mt-2">
+                        Learn More →
+                      </a>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {selectedPhotos.length > 0 && (
+          <section className="rounded-[40px] border border-white/70 dark:border-slate-800/70 bg-white/80 dark:bg-slate-900/70 backdrop-blur-xl shadow-[0_20px_60px_rgba(15,23,42,0.08)] p-8 space-y-6">
+            <div>
+              <p className="text-xs uppercase tracking-[0.4em] text-slate-400">Visual Story</p>
+              <h2 className="text-2xl font-semibold text-slate-900 dark:text-white">Photo Gallery</h2>
+            </div>
+            <div className="grid gap-4 grid-cols-2 md:grid-cols-3">
+              {selectedPhotos.map((entry: any) => (
+                <div
+                  key={entry.id}
+                  className="rounded-2xl overflow-hidden border border-slate-200/80 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60"
+                >
+                  <img src={entry.photo_url} alt={entry.caption || 'Gallery photo'} className="w-full h-48 object-cover" />
+                  {entry.caption && (
+                    <p className="text-sm text-muted-foreground p-3">{entry.caption}</p>
+                  )}
+                </div>
               ))}
             </div>
           </section>

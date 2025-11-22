@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useBusinessCards } from '@/hooks/useBusinessCards';
 import { useProfile } from '@/hooks/useProfile';
+import { useEducation } from '@/hooks/useEducation';
+import { useAwards } from '@/hooks/useAwards';
+import { useProductsServices } from '@/hooks/useProductsServices';
+import { usePhotoGallery } from '@/hooks/usePhotoGallery';
 import { generateUniqueSlug } from '@/lib/slugify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,6 +23,7 @@ type SelectedFieldsState = {
   primary_email: boolean;
   mobile_number: boolean;
   alternate_mobile: boolean;
+  whatsapp_number: boolean;
   bio: boolean;
   profile_photo_url: boolean;
   social_instagram: boolean;
@@ -30,6 +35,10 @@ type SelectedFieldsState = {
   professional_phones: string[];
   professional_instagrams: string[];
   professional_facebooks: string[];
+  educationIds: string[];
+  awardIds: string[];
+  productServiceIds: string[];
+  photoIds: string[];
 };
 
 export default function CardCreator() {
@@ -37,6 +46,10 @@ export default function CardCreator() {
   const navigate = useNavigate();
   const { cards, loading: cardsLoading, addCard, updateCard } = useBusinessCards();
   const { personalInfo, professionalInfo, loading: profileLoading } = useProfile();
+  const { education } = useEducation();
+  const { awards } = useAwards();
+  const { productsServices } = useProductsServices();
+  const { photos } = usePhotoGallery();
   
   const [cardName, setCardName] = useState('');
   const [slug, setSlug] = useState('');
@@ -45,6 +58,7 @@ export default function CardCreator() {
     primary_email: true,
     mobile_number: false,
     alternate_mobile: false,
+    whatsapp_number: false,
     bio: false,
     profile_photo_url: false,
     social_instagram: false,
@@ -56,6 +70,10 @@ export default function CardCreator() {
     professional_phones: [] as string[],
     professional_instagrams: [] as string[],
     professional_facebooks: [] as string[],
+    educationIds: [] as string[],
+    awardIds: [] as string[],
+    productServiceIds: [] as string[],
+    photoIds: [] as string[],
   });
 
   useEffect(() => {
@@ -71,6 +89,7 @@ export default function CardCreator() {
             primary_email: config.primary_email ?? true,
             mobile_number: config.mobile_number ?? false,
             alternate_mobile: config.alternate_mobile ?? false,
+            whatsapp_number: config.whatsapp_number ?? false,
             bio: config.bio ?? false,
             profile_photo_url: config.profile_photo_url ?? false,
             social_instagram: config.social_instagram ?? false,
@@ -82,6 +101,10 @@ export default function CardCreator() {
             professional_phones: config.professional_phones || [],
             professional_instagrams: config.professional_instagrams || [],
             professional_facebooks: config.professional_facebooks || [],
+            educationIds: config.educationIds || [],
+            awardIds: config.awardIds || [],
+            productServiceIds: config.productServiceIds || [],
+            photoIds: config.photoIds || [],
           });
         }
       }
@@ -308,6 +331,18 @@ export default function CardCreator() {
 
                   <div className="flex items-center space-x-2">
                     <Checkbox
+                      id="whatsapp_number"
+                      checked={selectedFields.whatsapp_number}
+                      disabled={!personalInfo?.whatsapp_number}
+                      onCheckedChange={(checked) => setSelectedFields(prev => ({ ...prev, whatsapp_number: checked as boolean }))}
+                    />
+                    <Label htmlFor="whatsapp_number" className={`cursor-pointer ${!personalInfo?.whatsapp_number ? 'text-muted-foreground' : ''}`}>
+                      WhatsApp {personalInfo?.whatsapp_number && <span className="text-muted-foreground">({personalInfo.whatsapp_number})</span>}
+                    </Label>
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
                       id="bio"
                       checked={selectedFields.bio}
                       onCheckedChange={(checked) => setSelectedFields(prev => ({ ...prev, bio: checked as boolean }))}
@@ -476,6 +511,131 @@ export default function CardCreator() {
                             </div>
                           )}
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-3">Education</h3>
+                {education.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No education entries yet. Add them in your profile.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {education.map((entry) => (
+                      <div key={entry.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`edu-${entry.id}`}
+                          checked={selectedFields.educationIds.includes(entry.id)}
+                          onCheckedChange={(checked) => {
+                            setSelectedFields(prev => ({
+                              ...prev,
+                              educationIds: checked
+                                ? [...prev.educationIds, entry.id]
+                                : prev.educationIds.filter(id => id !== entry.id)
+                            }));
+                          }}
+                        />
+                        <Label htmlFor={`edu-${entry.id}`} className="cursor-pointer text-sm">
+                          {entry.degree_name} - {entry.institution}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-3">Awards & Certifications</h3>
+                {awards.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No awards yet. Add them in your profile.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {awards.map((entry) => (
+                      <div key={entry.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`award-${entry.id}`}
+                          checked={selectedFields.awardIds.includes(entry.id)}
+                          onCheckedChange={(checked) => {
+                            setSelectedFields(prev => ({
+                              ...prev,
+                              awardIds: checked
+                                ? [...prev.awardIds, entry.id]
+                                : prev.awardIds.filter(id => id !== entry.id)
+                            }));
+                          }}
+                        />
+                        <Label htmlFor={`award-${entry.id}`} className="cursor-pointer text-sm">
+                          {entry.title} - {entry.issuing_org}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-3">Products & Services</h3>
+                {productsServices.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No products/services yet. Add them in your profile.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {productsServices.map((entry) => (
+                      <div key={entry.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`product-${entry.id}`}
+                          checked={selectedFields.productServiceIds.includes(entry.id)}
+                          onCheckedChange={(checked) => {
+                            setSelectedFields(prev => ({
+                              ...prev,
+                              productServiceIds: checked
+                                ? [...prev.productServiceIds, entry.id]
+                                : prev.productServiceIds.filter(id => id !== entry.id)
+                            }));
+                          }}
+                        />
+                        <Label htmlFor={`product-${entry.id}`} className="cursor-pointer text-sm">
+                          {entry.name}
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-3">Photo Gallery</h3>
+                {photos.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No photos yet. Add them in your profile.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {photos.map((entry) => (
+                      <div key={entry.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`photo-${entry.id}`}
+                          checked={selectedFields.photoIds.includes(entry.id)}
+                          onCheckedChange={(checked) => {
+                            setSelectedFields(prev => ({
+                              ...prev,
+                              photoIds: checked
+                                ? [...prev.photoIds, entry.id]
+                                : prev.photoIds.filter(id => id !== entry.id)
+                            }));
+                          }}
+                        />
+                        <Label htmlFor={`photo-${entry.id}`} className="cursor-pointer text-sm flex items-center gap-2">
+                          <img src={entry.photo_url} alt={entry.caption || 'Photo'} className="w-8 h-8 object-cover rounded" />
+                          {entry.caption || 'Photo'}
+                        </Label>
                       </div>
                     ))}
                   </div>
