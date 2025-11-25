@@ -84,8 +84,8 @@ export function useAnalytics() {
       const totalViews = allViews.length;
 
       // Calculate unique visitors (by IP)
-      const uniqueIPs = new Set(allViews.map((v) => v.ip_address).filter(Boolean));
-      const uniqueVisitors = uniqueIPs.size;
+      const uniqueIPsSet = new Set(allViews.map((v) => v.ip_address).filter(Boolean));
+      const uniqueVisitors = uniqueIPsSet.size;
 
       // Views by card
       const viewsByCardMap = new Map<string, { name: string; count: number }>();
@@ -127,16 +127,45 @@ export function useAnalytics() {
         });
       }
 
-      // Views by location (extract from IP - simplified, you'd use a GeoIP service in production)
-      // For now, we'll use a placeholder
+      // Views by location (using IP-API for geolocation)
       const viewsByLocation: { country: string; views: number }[] = [];
       const locationMap = new Map<string, number>();
       
+      // Get unique IPs to reduce API calls
+      const uniqueIPs = Array.from(new Set(allViews.map(v => v.ip_address).filter(Boolean))) as string[];
+      
+      // Fetch location data for each unique IP
+      const locationPromises = uniqueIPs.map(async (ip: string) => {
+        try {
+          // Try ipapi.co first (HTTPS, free, no API key for 1000 requests/day)
+          const response = await fetch(`https://ipapi.co/${ip}/country_name/`);
+          if (response.ok) {
+            const country = await response.text();
+            return { ip, country: country.trim() || 'Unknown' };
+          }
+          
+          // Fallback to ip-api.com
+          const fallbackResponse = await fetch(`http://ip-api.com/json/${ip}?fields=country`);
+          const data = await fallbackResponse.json();
+          return { ip, country: data.country || 'Unknown' };
+        } catch (error) {
+          console.error(`Failed to get location for IP ${ip}:`, error);
+          return { ip, country: 'Unknown' };
+        }
+      });
+
+      // Wait for all location lookups
+      const locationResults = await Promise.all(locationPromises);
+      const ipToCountry = new Map<string, string>(locationResults.map(r => [r.ip, r.country]));
+
+      // Count views by country
       allViews.forEach((view) => {
-        // In production, you'd use a GeoIP API to get country from IP
-        // For now, we'll use a placeholder
-        const country = 'Unknown';
-        locationMap.set(country, (locationMap.get(country) || 0) + 1);
+        if (view.ip_address) {
+          const country = ipToCountry.get(view.ip_address) || 'Unknown';
+          locationMap.set(country, (locationMap.get(country) || 0) + 1);
+        } else {
+          locationMap.set('Unknown', (locationMap.get('Unknown') || 0) + 1);
+        }
       });
 
       locationMap.forEach((views, country) => {
