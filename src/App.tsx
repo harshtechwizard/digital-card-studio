@@ -13,6 +13,7 @@ import Profile from "./pages/Profile";
 import MyCards from "./pages/MyCards";
 import CardCreator from "./pages/CardCreator";
 import PublicCard from "./pages/PublicCard";
+import Analytics from "./pages/Analytics";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import NotFound from "./pages/NotFound";
@@ -27,6 +28,7 @@ function AppNav() {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex gap-2">
           <NavLink to="/my-cards">My Cards</NavLink>
+          <NavLink to="/analytics">Analytics</NavLink>
           <NavLink to="/profile">Profile</NavLink>
           <NavLink to="/">Templates</NavLink>
         </div>
@@ -65,6 +67,7 @@ const App = () => (
                     <Route path="/" element={<Index />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/my-cards" element={<MyCards />} />
+                    <Route path="/analytics" element={<Analytics />} />
                     <Route path="/cards/new" element={<CardCreator />} />
                     <Route path="/cards/edit/:id" element={<CardCreator />} />
                     <Route path="*" element={<NotFound />} />
