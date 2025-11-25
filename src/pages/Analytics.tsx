@@ -271,7 +271,7 @@ export default function Analytics() {
             <Card>
               <CardHeader>
                 <CardTitle>Views by Location</CardTitle>
-                <CardDescription>Geographic distribution of visitors</CardDescription>
+                <CardDescription>Geographic distribution of visitors (City, Country)</CardDescription>
               </CardHeader>
               <CardContent>
                 {analytics.viewsByLocation.length > 0 ? (

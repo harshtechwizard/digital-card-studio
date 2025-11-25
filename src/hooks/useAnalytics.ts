@@ -134,35 +134,45 @@ export function useAnalytics() {
       // Get unique IPs to reduce API calls
       const uniqueIPs = Array.from(new Set(allViews.map(v => v.ip_address).filter(Boolean))) as string[];
       
-      // Fetch location data for each unique IP
+      // Fetch location data for each unique IP (with city and country)
       const locationPromises = uniqueIPs.map(async (ip: string) => {
         try {
           // Try ipapi.co first (HTTPS, free, no API key for 1000 requests/day)
-          const response = await fetch(`https://ipapi.co/${ip}/country_name/`);
+          // Get both city and country
+          const response = await fetch(`https://ipapi.co/${ip}/json/`);
           if (response.ok) {
-            const country = await response.text();
-            return { ip, country: country.trim() || 'Unknown' };
+            const data = await response.json();
+            const city = data.city || '';
+            const country = data.country_name || 'Unknown';
+            const location = city ? `${city}, ${country}` : country;
+            return { ip, country, city, location };
           }
           
-          // Fallback to ip-api.com
-          const fallbackResponse = await fetch(`http://ip-api.com/json/${ip}?fields=country`);
-          const data = await fallbackResponse.json();
-          return { ip, country: data.country || 'Unknown' };
+          // Fallback to ip-api.com (includes city)
+          const fallbackResponse = await fetch(`http://ip-api.com/json/${ip}?fields=country,city`);
+          const fallbackData = await fallbackResponse.json();
+          const city = fallbackData.city || '';
+          const country = fallbackData.country || 'Unknown';
+          const location = city ? `${city}, ${country}` : country;
+          return { ip, country, city, location };
         } catch (error) {
           console.error(`Failed to get location for IP ${ip}:`, error);
-          return { ip, country: 'Unknown' };
+          return { ip, country: 'Unknown', city: '', location: 'Unknown' };
         }
       });
 
       // Wait for all location lookups
       const locationResults = await Promise.all(locationPromises);
-      const ipToCountry = new Map<string, string>(locationResults.map(r => [r.ip, r.country]));
+      const ipToLocation = new Map<string, { country: string; city: string; location: string }>(
+        locationResults.map(r => [r.ip, { country: r.country, city: r.city, location: r.location }])
+      );
 
-      // Count views by country
+      // Count views by location (city + country)
       allViews.forEach((view) => {
         if (view.ip_address) {
-          const country = ipToCountry.get(view.ip_address) || 'Unknown';
-          locationMap.set(country, (locationMap.get(country) || 0) + 1);
+          const locationData = ipToLocation.get(view.ip_address);
+          const location = locationData?.location || 'Unknown';
+          locationMap.set(location, (locationMap.get(location) || 0) + 1);
         } else {
           locationMap.set('Unknown', (locationMap.get('Unknown') || 0) + 1);
         }
