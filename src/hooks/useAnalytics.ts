@@ -78,7 +78,7 @@ export function useAnalytics() {
 
       if (analyticsError) throw analyticsError;
 
-      const allViews = analyticsData || [];
+      const allViews = (analyticsData || []) as CardAnalytic[];
 
       // Calculate total views
       const totalViews = allViews.length;

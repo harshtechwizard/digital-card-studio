@@ -54,10 +54,19 @@ export function usePublicCard(slug: string) {
       console.log('usePublicCard: Found card:', card);
       const typedCard = card as BusinessCard;
 
-      // Track analytics
+      // Track analytics - Get IP address from ipify API
+      let ipAddress: string | null = null;
+      try {
+        const ipResponse = await fetch('https://api.ipify.org?format=json');
+        const ipData = await ipResponse.json();
+        ipAddress = ipData.ip;
+      } catch (error) {
+        console.error('Failed to get IP address:', error);
+      }
+
       const analyticsData = {
         card_id: typedCard.id,
-        ip_address: null as string | null,
+        ip_address: ipAddress,
         user_agent: navigator.userAgent,
         referrer: (document.referrer || null) as string | null,
       } as any;
