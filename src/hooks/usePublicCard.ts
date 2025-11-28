@@ -26,7 +26,9 @@ export function usePublicCard(slug: string) {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchCard();
+    if (slug) {
+      fetchCard();
+    }
   }, [slug]);
 
   const fetchCard = async () => {
