@@ -29,7 +29,8 @@ export default function Login() {
         variant: 'destructive',
       });
     } else {
-      navigate('/my-cards');
+      // Redirect to profile for first-time setup
+      navigate('/profile');
     }
 
     setLoading(false);

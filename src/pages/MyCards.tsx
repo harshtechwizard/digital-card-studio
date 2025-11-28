@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Plus, Share2, Settings, Trash2, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from '@/hooks/use-toast';
+import { ProfileCompletionBanner } from '@/components/ProfileCompletionBanner';
+import { useProfileCompletion } from '@/hooks/useProfileCompletion';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,6 +31,7 @@ import { Label } from '@/components/ui/label';
 
 export default function MyCards() {
   const { cards, loading, error, deleteCard } = useBusinessCards();
+  const { isProfileComplete } = useProfileCompletion();
   const navigate = useNavigate();
 
   const handleShare = (slug: string) => {
@@ -91,6 +94,8 @@ export default function MyCards() {
             Create New Card
           </Button>
         </div>
+
+        <ProfileCompletionBanner isProfileComplete={isProfileComplete} />
 
         {cards.length === 0 ? (
           <div className="text-center py-16">

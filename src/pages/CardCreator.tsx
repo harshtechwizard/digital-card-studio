@@ -15,6 +15,7 @@ import { Card as UICard, CardContent, CardDescription, CardHeader, CardTitle } f
 import { BusinessCardPreview } from '@/components/BusinessCardPreview';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { ProfileCompletionBanner } from '@/components/ProfileCompletionBanner';
 
 type ProfessionalFieldKey = 'linkedin_urls' | 'professional_emails' | 'professional_phones' | 'professional_instagrams' | 'professional_facebooks';
 
@@ -50,6 +51,12 @@ export default function CardCreator() {
   const { awards } = useAwards();
   const { productsServices } = useProductsServices();
   const { photos } = usePhotoGallery();
+  
+  const isProfileComplete = Boolean(
+    personalInfo &&
+    personalInfo.full_name &&
+    personalInfo.full_name.trim() !== ''
+  );
   
   const [cardName, setCardName] = useState('');
   const [slug, setSlug] = useState('');
@@ -241,6 +248,10 @@ export default function CardCreator() {
         <h1 className="text-3xl font-bold text-foreground mb-8">
           {id ? 'Edit Card' : 'Create New Card'}
         </h1>
+
+        {!isProfileComplete && (
+          <ProfileCompletionBanner isProfileComplete={isProfileComplete} />
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="space-y-6">

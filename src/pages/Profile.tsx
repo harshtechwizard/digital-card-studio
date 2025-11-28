@@ -17,16 +17,13 @@ import { toast } from '@/hooks/use-toast';
 import { Pencil, Trash2, Plus, Loader2, X, GraduationCap, Award, Package, Image as ImageIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
 import { ChangeEvent } from 'react';
+import { OnboardingTutorial } from '@/components/OnboardingTutorial';
+import { useNavigate } from 'react-router-dom';
 
-type PersonalInfo = Database['public']['Tables']['personal_info']['Row'];
 type ProfessionalInfo = Database['public']['Tables']['professional_info']['Row'];
-type Education = Database['public']['Tables']['education']['Row'];
-type Award = Database['public']['Tables']['awards']['Row'];
-type ProductService = Database['public']['Tables']['products_services']['Row'];
-type Photo = Database['public']['Tables']['photo_gallery']['Row'];
 
 export default function Profile() {
-  const { personalInfo, professionalInfo, loading, error, savePersonalInfo, saveProfessionalInfo, deleteProfessionalInfo } = useProfile();
+  const { personalInfo, professionalInfo, loading, savePersonalInfo, saveProfessionalInfo, deleteProfessionalInfo } = useProfile();
   const { education, addEducation, updateEducation, deleteEducation } = useEducation();
   const { awards, addAward, updateAward, deleteAward } = useAwards();
   const { productsServices, addProductService, updateProductService, deleteProductService } = useProductsServices();
@@ -48,6 +45,19 @@ export default function Profile() {
   });
 
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const navigate = useNavigate();
+
+  // Show onboarding tutorial for new users
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
+    if (!hasSeenOnboarding && !loading && personalInfo) {
+      // Check if profile is empty (new user)
+      if (!personalInfo.full_name || personalInfo.full_name.trim() === '') {
+        setShowOnboarding(true);
+      }
+    }
+  }, [loading, personalInfo]);
 
   // Education state
   const [editingEducation, setEditingEducation] = useState<string | null>(null);
@@ -288,6 +298,13 @@ export default function Profile() {
         title: "Profile saved",
         description: "Your personal information has been updated successfully.",
       });
+      
+      // If this is the first save, redirect to cards page
+      if (!personalInfo?.full_name || personalInfo.full_name.trim() === '') {
+        setTimeout(() => {
+          navigate('/my-cards');
+        }, 1000);
+      }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to save profile';
       toast({
@@ -296,6 +313,11 @@ export default function Profile() {
         variant: "destructive",
       });
     }
+  };
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('hasSeenOnboarding', 'true');
+    setShowOnboarding(false);
   };
 
   const handleAddProfessional = async () => {
@@ -422,9 +444,17 @@ export default function Profile() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8 max-w-4xl pb-24">
-        <h1 className="text-3xl font-bold text-foreground mb-8">Manage Your Information</h1>
+    <>
+      <OnboardingTutorial open={showOnboarding} onComplete={handleOnboardingComplete} />
+      
+      <div className="min-h-screen bg-background">
+        <div className="container mx-auto px-4 py-8 max-w-4xl pb-24">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-foreground">Manage Your Information</h1>
+            <p className="text-muted-foreground mt-2">
+              Complete your profile to create professional business cards
+            </p>
+          </div>
         
         <Tabs defaultValue="personal" className="w-full">
           <TabsList className="grid w-full grid-cols-4 mb-8">
@@ -1743,13 +1773,14 @@ export default function Profile() {
         </Tabs>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 shadow-lg">
-        <div className="container mx-auto max-w-4xl">
-          <Button onClick={handleSavePersonal} className="w-full" size="lg">
-            Save Personal Information
-          </Button>
+        <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border p-4 shadow-lg">
+          <div className="container mx-auto max-w-4xl">
+            <Button onClick={handleSavePersonal} className="w-full" size="lg">
+              Save Personal Information
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

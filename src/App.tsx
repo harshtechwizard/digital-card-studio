@@ -27,10 +27,9 @@ function AppNav() {
     <nav className="border-b border-border bg-card">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         <div className="flex gap-2">
+          <NavLink to="/profile">Profile</NavLink>
           <NavLink to="/my-cards">My Cards</NavLink>
           <NavLink to="/analytics">Analytics</NavLink>
-          <NavLink to="/profile">Profile</NavLink>
-          <NavLink to="/">Templates</NavLink>
         </div>
         {user && (
           <div className="flex items-center gap-4">
@@ -64,7 +63,7 @@ const App = () => (
                 <div className="min-h-screen bg-background">
                   <AppNav />
                   <Routes>
-                    <Route path="/" element={<Index />} />
+                    <Route path="/" element={<Navigate to="/profile" replace />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/my-cards" element={<MyCards />} />
                     <Route path="/analytics" element={<Analytics />} />
