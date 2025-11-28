@@ -4,12 +4,12 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { TutorialProvider, useTutorial } from "@/contexts/TutorialContext";
+// import { TutorialProvider, useTutorial } from "@/contexts/TutorialContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { NavLink } from "@/components/NavLink";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { InteractiveTutorial } from "@/components/InteractiveTutorial";
+// import { InteractiveTutorial } from "@/components/InteractiveTutorial";
 import Index from "./pages/Index";
 import Profile from "./pages/Profile";
 import MyCards from "./pages/MyCards";
@@ -24,7 +24,7 @@ const queryClient = new QueryClient();
 
 function AppNav() {
   const { user, signOut } = useAuth();
-  const { startTutorial } = useTutorial();
+  // const { startTutorial } = useTutorial();
 
   return (
     <nav className="border-b border-border bg-card">
@@ -36,14 +36,15 @@ function AppNav() {
         </div>
         {user && (
           <div className="flex items-center gap-4">
-            <Button 
+            {/* Tutorial button - commented out for now */}
+            {/* <Button 
               variant="ghost" 
               size="sm" 
               onClick={startTutorial}
               className="text-xs"
             >
               Tutorial
-            </Button>
+            </Button> */}
             <span className="text-sm text-muted-foreground">{user.email}</span>
             <Button variant="outline" size="sm" onClick={() => signOut()}>
               Sign Out
@@ -56,11 +57,12 @@ function AppNav() {
 }
 
 function AppContent() {
-  const { showTutorial, completeTutorial } = useTutorial();
+  // const { showTutorial, completeTutorial } = useTutorial();
 
   return (
     <>
-      {showTutorial && <InteractiveTutorial onComplete={completeTutorial} />}
+      {/* Interactive tutorial - commented out for now */}
+      {/* {showTutorial && <InteractiveTutorial onComplete={completeTutorial} />} */}
       
       <Routes>
         {/* Public routes */}
@@ -97,9 +99,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <TutorialProvider>
+          {/* TutorialProvider commented out for now */}
+          {/* <TutorialProvider> */}
             <AppContent />
-          </TutorialProvider>
+          {/* </TutorialProvider> */}
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
