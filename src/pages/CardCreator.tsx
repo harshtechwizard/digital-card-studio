@@ -6,7 +6,7 @@ import { useEducation } from '@/hooks/useEducation';
 import { useAwards } from '@/hooks/useAwards';
 import { useProductsServices } from '@/hooks/useProductsServices';
 import { usePhotoGallery } from '@/hooks/usePhotoGallery';
-import { generateUniqueSlug } from '@/lib/slugify';
+import { slugify } from '@/lib/slugify';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -60,6 +60,7 @@ export default function CardCreator() {
   
   const [cardName, setCardName] = useState('');
   const [slug, setSlug] = useState('');
+  const [isGeneratingSlug, setIsGeneratingSlug] = useState(false);
   const [selectedFields, setSelectedFields] = useState<SelectedFieldsState>({
     full_name: true,
     primary_email: true,
@@ -118,10 +119,28 @@ export default function CardCreator() {
     }
   }, [id, cards]);
 
-  const handleSlugChange = (value: string) => {
-    const sanitized = value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
-    setSlug(sanitized);
-  };
+  // Auto-generate slug when card name changes
+  useEffect(() => {
+    if (cardName && !id) { // Only auto-generate for new cards
+      const generateSlug = async () => {
+        setIsGeneratingSlug(true);
+        const baseSlug = slugify(cardName);
+        let finalSlug = baseSlug;
+        let counter = 1;
+        
+        // Check if slug exists and add counter if needed
+        while (cards.some(c => c.slug === finalSlug)) {
+          finalSlug = `${baseSlug}-${counter}`;
+          counter++;
+        }
+        
+        setSlug(finalSlug);
+        setIsGeneratingSlug(false);
+      };
+      
+      generateSlug();
+    }
+  }, [cardName, cards, id]);
 
   const toggleProfessional = (profId: string) => {
     setSelectedFields(prev => {
@@ -164,31 +183,35 @@ export default function CardCreator() {
   };
 
   const handleSave = async () => {
-    if (!cardName || !slug) {
+    if (!cardName) {
       toast({
-        title: "Missing fields",
-        description: "Card name and slug are required.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check if slug is already taken by another card
-    const existingCard = cards.find(c => c.slug === slug && c.id !== id);
-    if (existingCard) {
-      toast({
-        title: "Slug already exists",
-        description: "Please choose a different slug.",
+        title: "Missing field",
+        description: "Card name is required.",
         variant: "destructive",
       });
       return;
     }
 
     try {
+      let finalSlug = slug;
+      
+      // For new cards, ensure slug is unique
+      if (!id) {
+        const baseSlug = slugify(cardName);
+        finalSlug = baseSlug;
+        let counter = 1;
+        
+        // Check if slug exists and add counter if needed
+        while (cards.some(c => c.slug === finalSlug)) {
+          finalSlug = `${baseSlug}-${counter}`;
+          counter++;
+        }
+      }
+
       if (id) {
         await updateCard(id, {
           name: cardName,
-          slug,
+          slug: finalSlug,
           fields_config: selectedFields,
         });
         toast({
@@ -198,7 +221,7 @@ export default function CardCreator() {
       } else {
         await addCard({
           name: cardName,
-          slug: slug || generateUniqueSlug(cardName),
+          slug: finalSlug,
           fields_config: selectedFields,
           design_config: { theme: 'light' },
           is_active: true,
@@ -272,15 +295,28 @@ export default function CardCreator() {
               </div>
 
               <div>
-                <Label htmlFor="slug">Card Slug (URL)</Label>
-                <Input
-                  id="slug"
-                  value={slug}
-                  onChange={(e) => handleSlugChange(e.target.value)}
-                  placeholder="e.g., john-doe-personal"
-                />
+                <Label htmlFor="slug">Card URL (Auto-generated)</Label>
+                <div className="flex items-center gap-2">
+                  <Input
+                    id="slug"
+                    value={slug}
+                    readOnly
+                    disabled
+                    className="bg-muted cursor-not-allowed"
+                    placeholder="Will be generated from card name..."
+                  />
+                  {isGeneratingSlug && (
+                    <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                  )}
+                </div>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Your card will be available at: {window.location.origin}/card/{slug || 'your-slug'}
+                  {slug ? (
+                    <>
+                      Your card will be available at: <span className="font-mono text-primary">{window.location.origin}/card/{slug}</span>
+                    </>
+                  ) : (
+                    'URL will be automatically generated from your card name'
+                  )}
                 </p>
               </div>
             </CardContent>
