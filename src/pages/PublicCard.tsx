@@ -313,16 +313,16 @@ function PublicCardContent({ data, slug }: { data: any; slug: string }) {
 
       <div className="relative z-10 w-full max-w-6xl space-y-10">
         <header className="text-center space-y-4">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/70 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 text-xs uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/80 dark:bg-slate-900/70 border border-slate-300/70 dark:border-slate-700 text-sm font-semibold uppercase tracking-[0.2em] text-slate-700 dark:text-slate-200 shadow-sm">
             <Building2 className="w-4 h-4" />
             {featuredProfessional?.company_name || 'Digital Card'}
           </div>
           {fieldsConfig?.full_name && personalInfo?.full_name && (
-            <div className="space-y-2">
+            <div className="space-y-3">
               <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 dark:text-white tracking-tight">
                 {personalInfo.full_name}
               </h1>
-              <p className="text-base text-muted-foreground max-w-3xl mx-auto">
+              <p className="text-lg font-medium text-slate-700 dark:text-slate-200 max-w-3xl mx-auto leading-relaxed">
                 {personalInfo.bio && fieldsConfig?.bio
                   ? personalInfo.bio
                   : selectedProfessionalEntries[0]?.designation || 'Building meaningful connections'}
@@ -491,7 +491,7 @@ function PublicCardContent({ data, slug }: { data: any; slug: string }) {
                         {entry.designation || 'Professional'}
                       </h3>
                       {entry.company_name && (
-                        <p className="text-sm text-muted-foreground">{entry.company_name}</p>
+                        <p className="text-base font-semibold text-slate-700 dark:text-slate-200">{entry.company_name}</p>
                       )}
                     </div>
                     {entry.department && (

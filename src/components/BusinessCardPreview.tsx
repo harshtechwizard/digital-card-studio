@@ -73,10 +73,14 @@ export function BusinessCardPreview({ personalInfo, professionalInfo, fieldsConf
               </h1>
 
               {selectedProfessional && (
-                <div className="text-sm text-muted-foreground">
-                  {selectedProfessional.designation && <p>{selectedProfessional.designation}</p>}
+                <div className="text-center space-y-1">
+                  {selectedProfessional.designation && (
+                    <p className="text-base font-medium text-slate-700 dark:text-slate-200">
+                      {selectedProfessional.designation}
+                    </p>
+                  )}
                   {selectedProfessional.company_name && (
-                    <p className="text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-slate-400">
+                    <p className="text-sm font-semibold uppercase tracking-[0.15em] text-slate-600 dark:text-slate-300">
                       {selectedProfessional.company_name}
                     </p>
                   )}
@@ -87,7 +91,7 @@ export function BusinessCardPreview({ personalInfo, professionalInfo, fieldsConf
 
           {/* Bio */}
           {fieldsConfig?.bio && personalInfo?.bio && (
-            <p className="text-center text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-md">
+            <p className="text-center text-base font-medium text-slate-700 dark:text-slate-200 leading-relaxed max-w-md">
               {personalInfo.bio}
             </p>
           )}
