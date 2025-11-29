@@ -28,14 +28,16 @@ Card Name: "John Doe Personal"
 Generated Slug: "john-doe-personal"
 ```
 
-### 2. Uniqueness Check
-If a slug already exists, a number is appended:
+### 2. Global Uniqueness Check
+The system checks the **entire database** (all users) to ensure uniqueness:
 
 ```
-First card: "john-doe-personal"
-Second card: "john-doe-personal-1"
-Third card: "john-doe-personal-2"
+User A creates: "john-doe-personal"
+User B tries same name: "john-doe-personal-1" (auto-incremented)
+User C tries same name: "john-doe-personal-2" (auto-incremented)
 ```
+
+**Important**: Slugs are globally unique across ALL users, not just per-user.
 
 ### 3. Real-Time Updates
 - Slug updates as user types the card name
@@ -48,19 +50,36 @@ Third card: "john-doe-personal-2"
 ```typescript
 useEffect(() => {
   if (cardName && !id) { // Only for new cards
-    const baseSlug = slugify(cardName);
-    let finalSlug = baseSlug;
-    let counter = 1;
+    const generateSlug = async () => {
+      const baseSlug = slugify(cardName);
+      let finalSlug = baseSlug;
+      let counter = 1;
+      
+      // Check if slug exists GLOBALLY in database
+      let slugExists = true;
+      while (slugExists) {
+        const { data } = await supabase
+          .from('business_cards')
+          .select('slug')
+          .eq('slug', finalSlug)
+          .maybeSingle();
+        
+        if (data) {
+          // Slug exists globally, try next one
+          finalSlug = `${baseSlug}-${counter}`;
+          counter++;
+        } else {
+          // Slug is available
+          slugExists = false;
+        }
+      }
+      
+      setSlug(finalSlug);
+    };
     
-    // Check if slug exists and add counter if needed
-    while (cards.some(c => c.slug === finalSlug)) {
-      finalSlug = `${baseSlug}-${counter}`;
-      counter++;
-    }
-    
-    setSlug(finalSlug);
+    generateSlug();
   }
-}, [cardName, cards, id]);
+}, [cardName, id]);
 ```
 
 ### Save Logic
@@ -68,15 +87,27 @@ useEffect(() => {
 const handleSave = async () => {
   let finalSlug = slug;
   
-  // For new cards, ensure slug is unique
+  // For new cards, ensure slug is unique GLOBALLY
   if (!id) {
     const baseSlug = slugify(cardName);
     finalSlug = baseSlug;
     let counter = 1;
     
-    while (cards.some(c => c.slug === finalSlug)) {
-      finalSlug = `${baseSlug}-${counter}`;
-      counter++;
+    // Check database for global uniqueness
+    let slugExists = true;
+    while (slugExists) {
+      const { data } = await supabase
+        .from('business_cards')
+        .select('slug')
+        .eq('slug', finalSlug)
+        .maybeSingle();
+      
+      if (data) {
+        finalSlug = `${baseSlug}-${counter}`;
+        counter++;
+      } else {
+        slugExists = false;
+      }
     }
   }
   

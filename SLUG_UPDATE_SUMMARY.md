@@ -51,12 +51,14 @@ Slug: "my-business-card"
 URL: /card/my-business-card
 ```
 
-### Duplicate Handling
+### Duplicate Handling (Global)
 ```
-1st card: "Business Card" → "business-card"
-2nd card: "Business Card" → "business-card-1"
-3rd card: "Business Card" → "business-card-2"
+User A: "Business Card" → "business-card"
+User B: "Business Card" → "business-card-1"
+User C: "Business Card" → "business-card-2"
 ```
+
+**Note**: Slugs are checked globally across ALL users in the database, ensuring complete uniqueness.
 
 ### Special Characters
 ```

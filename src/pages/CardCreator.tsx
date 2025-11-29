@@ -16,6 +16,7 @@ import { BusinessCardPreview } from '@/components/BusinessCardPreview';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ProfileCompletionBanner } from '@/components/ProfileCompletionBanner';
+import { supabase } from '@/lib/supabase/client';
 
 type ProfessionalFieldKey = 'linkedin_urls' | 'professional_emails' | 'professional_phones' | 'professional_instagrams' | 'professional_facebooks';
 
@@ -128,10 +129,28 @@ export default function CardCreator() {
         let finalSlug = baseSlug;
         let counter = 1;
         
-        // Check if slug exists and add counter if needed
-        while (cards.some(c => c.slug === finalSlug)) {
-          finalSlug = `${baseSlug}-${counter}`;
-          counter++;
+        // Check if slug exists GLOBALLY in database (not just user's cards)
+        let slugExists = true;
+        while (slugExists) {
+          const { data, error } = await supabase
+            .from('business_cards')
+            .select('slug')
+            .eq('slug', finalSlug)
+            .maybeSingle();
+          
+          if (error) {
+            console.error('Error checking slug:', error);
+            break;
+          }
+          
+          if (data) {
+            // Slug exists, try next one
+            finalSlug = `${baseSlug}-${counter}`;
+            counter++;
+          } else {
+            // Slug is available
+            slugExists = false;
+          }
         }
         
         setSlug(finalSlug);
@@ -140,7 +159,7 @@ export default function CardCreator() {
       
       generateSlug();
     }
-  }, [cardName, cards, id]);
+  }, [cardName, id]);
 
   const toggleProfessional = (profId: string) => {
     setSelectedFields(prev => {
@@ -195,16 +214,34 @@ export default function CardCreator() {
     try {
       let finalSlug = slug;
       
-      // For new cards, ensure slug is unique
+      // For new cards, ensure slug is unique GLOBALLY
       if (!id) {
         const baseSlug = slugify(cardName);
         finalSlug = baseSlug;
         let counter = 1;
         
-        // Check if slug exists and add counter if needed
-        while (cards.some(c => c.slug === finalSlug)) {
-          finalSlug = `${baseSlug}-${counter}`;
-          counter++;
+        // Check if slug exists GLOBALLY in database
+        let slugExists = true;
+        while (slugExists) {
+          const { data, error } = await supabase
+            .from('business_cards')
+            .select('slug')
+            .eq('slug', finalSlug)
+            .maybeSingle();
+          
+          if (error) {
+            console.error('Error checking slug:', error);
+            break;
+          }
+          
+          if (data) {
+            // Slug exists globally, try next one
+            finalSlug = `${baseSlug}-${counter}`;
+            counter++;
+          } else {
+            // Slug is available
+            slugExists = false;
+          }
         }
       }
 
